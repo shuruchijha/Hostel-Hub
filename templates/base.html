@@ -6,6 +6,12 @@
   <title>{% block title %}Midnight Pantry · Campus Night Essentials{% endblock %}</title>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#0a090e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Midnight Pantry">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- Fonts: display=swap so text shows before fonts load -->
@@ -887,6 +893,36 @@
       btn.innerHTML = '👁️';
       btn.setAttribute("title", "Show password");
       btn.setAttribute("aria-label", "Show password");
+    }
+  }
+  // Register PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}").catch(() => {});
+    });
+  }
+
+  // PWA Install prompt handling
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const pwaBtn = document.getElementById('pwaInstallBtn');
+    if (pwaBtn) pwaBtn.style.display = 'inline-flex';
+  });
+
+  function triggerPWAInstall() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          const pwaBtn = document.getElementById('pwaInstallBtn');
+          if (pwaBtn) pwaBtn.style.display = 'none';
+        }
+        deferredPrompt = null;
+      });
+    } else {
+      alert("To install Midnight Pantry on your phone:\n• Android (Chrome): Tap the 3 dots (⋮) ➔ 'Install app' or 'Add to Home screen'\n• iPhone (Safari): Tap the Share button (⬆) ➔ 'Add to Home Screen'");
     }
   }
 </script>

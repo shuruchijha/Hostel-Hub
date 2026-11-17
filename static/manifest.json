@@ -1,0 +1,25 @@
+{
+  "name": "Midnight Pantry · Campus Sharing",
+  "short_name": "Midnight Pantry",
+  "description": "Verified student hostel pantry and peer-to-peer sharing hub",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a090e",
+  "theme_color": "#0a090e",
+  "icons": [
+    {
+      "src": "/static/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

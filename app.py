@@ -24,9 +24,11 @@ HOSTELS = ["Girls Hostel", "Boys Hostel"]
 GIRLS_BLOCKS = ["Krishnaveni", "Bhima", "Tungabhadra", "Munneru", "Ghataprabha"]
 CATEGORIES = {
     "Food": "🍜",
-    "Toiletries": "🧴",
-    "Stationery": "✏️",
+    "Toiletries & Hygiene": "🧴",
     "Medicine": "💊",
+    "Campus Gear & Electronics": "🔌",
+    "Books & Study Material": "📚",
+    "Stationery": "✏️",
     "Other": "📦",
 }
 CONDITIONS = {
@@ -92,6 +94,7 @@ class ItemRequest(db.Model):
     price_offer  = db.Column(db.Float, default=0.0)             # willing to pay in INR
     note         = db.Column(db.String(200), nullable=True)     # optional note
     is_fulfilled = db.Column(db.Boolean, default=False)
+    is_anonymous = db.Column(db.Boolean, default=False)         # Hide name for sensitive items (pads/meds)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship("User", backref="item_requests")
@@ -425,13 +428,15 @@ def add_request():
     if not name:
         flash("Please type what you are looking for.")
     else:
+        is_anon = bool(request.form.get("is_anonymous"))
         req = ItemRequest(
             user_id=user.id,
             name=name,
             category=category,
             urgency=urgency,
             price_offer=price_offer,
-            note=note
+            note=note,
+            is_anonymous=is_anon,
         )
         db.session.add(req)
         db.session.commit()
@@ -919,6 +924,11 @@ with app.app_context():
                     conn.execute(text("ALTER TABLE user ADD COLUMN upi_id       VARCHAR(100)"))
                 if "phone_number" not in user_cols:
                     conn.execute(text("ALTER TABLE user ADD COLUMN phone_number VARCHAR(20)"))
+        if "item_request" in tables:
+            req_cols = {c["name"] for c in insp.get_columns("item_request")}
+            with db.engine.begin() as conn:
+                if "is_anonymous" not in req_cols:
+                    conn.execute(text("ALTER TABLE item_request ADD COLUMN is_anonymous BOOLEAN DEFAULT 0"))
     except Exception as e:
         print(f"Migration note: {e}")
 

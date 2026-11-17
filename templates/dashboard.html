@@ -424,7 +424,17 @@
           </p>
         </div>
       </div>
-      <div style="display: flex; gap: 6px; align-items: center;">
+      <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+        <button type="button" id="pwaInstallBtn" onclick="triggerPWAInstall()" class="btn btn-sm" style="background: rgba(245, 166, 35, 0.18); color: var(--amber-bright); border: 1px solid rgba(245, 166, 35, 0.4); font-size: 0.76rem; padding: 4px 8px;">
+          📲 Install App
+        </button>
+        <a href="https://api.whatsapp.com/send?text={{ ('🌙 *Midnight Pantry — Our Hostel Hub*\nCheck what fellow students in ' ~ me.hostel_name ~ ' have or need right now:\n' ~ request.url_root)|urlencode }}"
+           target="_blank" rel="noopener"
+           class="btn btn-sm"
+           style="background: rgba(37, 211, 102, 0.15); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.35); font-size: 0.76rem; padding: 4px 8px;"
+           title="Invite or share with your hostel WhatsApp group">
+          💬 WhatsApp
+        </a>
         <button type="button" onclick="openRulesModal()" class="btn btn-ghost btn-sm" title="Night Owl Community Rules">
           💡 Rules
         </button>
@@ -471,18 +481,29 @@
                 <!-- Requester user header -->
                 <div class="request-user-row">
                   <div class="request-user-avatar">
-                    {{ requester.name[0].upper() }}
+                    {% if req.is_anonymous and requester.id != me.id %}
+                      🔒
+                    {% else %}
+                      {{ requester.name[0].upper() }}
+                    {% endif %}
                   </div>
                   <div style="min-width: 0; flex: 1;">
                     <div style="font-size: 0.88rem; font-weight: 700; color: var(--text);">
-                      {{ requester.name }}
-                      {% if requester.id == me.id %}
-                        <span class="badge badge-amber" style="font-size: 0.65rem; padding: 1px 6px;">You</span>
+                      {% if req.is_anonymous and requester.id != me.id %}
+                        Hostel Resident <span class="badge badge-muted" style="font-size: 0.65rem; padding: 1px 6px;">🔒 Private</span>
+                      {% else %}
+                        {{ requester.name }}
+                        {% if req.is_anonymous %}
+                          <span class="badge" style="background: rgba(124,92,255,0.15); color: #c4b5fd; font-size: 0.65rem; padding: 1px 6px;">🔒 Anonymous</span>
+                        {% endif %}
+                        {% if requester.id == me.id %}
+                          <span class="badge badge-amber" style="font-size: 0.65rem; padding: 1px 6px;">You</span>
+                        {% endif %}
                       {% endif %}
                     </div>
                     <div style="font-size: 0.74rem; color: var(--text-faint);">
                       {{ requester.hostel_name }}{% if requester.block %} · {{ requester.block }}{% endif %}
-                      {% if can_see_room_no(me, requester) %}
+                      {% if not req.is_anonymous and can_see_room_no(me, requester) %}
                         <span style="color: var(--amber); font-weight: 700;"> · 🚪 Room {{ requester.room_no }}</span>
                       {% else %}
                         <span> · 🔒 Room confidential</span>
@@ -533,12 +554,12 @@
               </div>
 
               <!-- Action Buttons -->
-              <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+              <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
                 {% if requester.id != me.id %}
                   <!-- I Have This / Help Button -->
                   <a href="{{ url_for('chat_detail', target_id=requester.id, request_item=req.name) }}"
                      class="btn btn-primary btn-full btn-sm" style="font-size: 0.82rem; padding: 0.55rem;">
-                    💬 I Have This / Help {{ requester.name.split()[0] }} →
+                    💬 I Have This / Help {{ 'Resident' if req.is_anonymous else requester.name.split()[0] }} →
                   </a>
                 {% else %}
                   <!-- Requester management: Mark Fulfilled / Delete -->
@@ -556,6 +577,15 @@
                     </form>
                   </div>
                 {% endif %}
+
+                <!-- 1-Tap Forward to WhatsApp Group -->
+                <a href="https://api.whatsapp.com/send?text={{ ('🚨 *Midnight Pantry Need*\nLooking for: *' ~ req.name ~ '*\nHostel: ' ~ requester.hostel_name ~ (', ' ~ requester.block if requester.block else '') ~ '\n' ~ ('Urgency: ' ~ req.urgency ~ '\n') ~ '\nGot it? Tap to help directly:\n' ~ request.url_root ~ 'chat/' ~ requester.id)|urlencode }}"
+                   target="_blank" rel="noopener"
+                   class="btn btn-ghost btn-sm"
+                   style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 5px; color: #25D366; border-color: rgba(37, 211, 102, 0.3); font-size: 0.74rem; padding: 4px 6px;"
+                   title="Forward to WhatsApp Group">
+                  <span>📲 Forward to WhatsApp Group</span>
+                </a>
               </div>
             </div>
           {% endfor %}
@@ -645,6 +675,13 @@
                      class="btn btn-primary btn-sm" style="flex: 1.2; padding: 0.5rem; font-size: 0.8rem; justify-content: center; gap: 4px;">
                     Shelf & Pay →
                   </a>
+                  <a href="https://api.whatsapp.com/send?text={{ ('🛍️ *Available on Midnight Pantry*\nItem: *' ~ item.name ~ '*\nCondition: ' ~ item.condition ~ '\nHostel: ' ~ owner.hostel_name ~ (', ' ~ owner.block if owner.block else '') ~ '\nCheck it out here:\n' ~ request.url_root)|urlencode }}"
+                     target="_blank" rel="noopener"
+                     class="btn btn-ghost btn-sm"
+                     style="padding: 0.5rem 0.65rem; color: #25D366; border-color: rgba(37, 211, 102, 0.35); font-size: 0.85rem;"
+                     title="Share item to hostel WhatsApp group">
+                    📲
+                  </a>
                 </div>
               </div>
             {% endfor %}
@@ -706,6 +743,13 @@
                   <a href="{{ url_for('profile', user_id=owner.id) }}"
                      class="btn btn-primary btn-sm" style="flex: 1.2; padding: 0.5rem; font-size: 0.8rem; justify-content: center; gap: 4px;">
                     Shelf & Pay →
+                  </a>
+                  <a href="https://api.whatsapp.com/send?text={{ ('🛍️ *Available on Midnight Pantry*\nItem: *' ~ item.name ~ '*\nCondition: ' ~ item.condition ~ '\nHostel: ' ~ owner.hostel_name ~ (', ' ~ owner.block if owner.block else '') ~ '\nCheck it out here:\n' ~ request.url_root)|urlencode }}"
+                     target="_blank" rel="noopener"
+                     class="btn btn-ghost btn-sm"
+                     style="padding: 0.5rem 0.65rem; color: #25D366; border-color: rgba(37, 211, 102, 0.35); font-size: 0.85rem;"
+                     title="Share item to hostel WhatsApp group">
+                    📲
                   </a>
                 </div>
               </div>
@@ -783,7 +827,15 @@
                  placeholder="e.g. Need for 30 mins to charge phone" maxlength="200">
         </div>
 
-        <button class="btn btn-primary btn-full" type="submit" style="background: linear-gradient(135deg, #a78bfa, #7c5cff); color: #fff;">
+        <!-- Anonymous / Safe Request Option -->
+        <div style="margin-top: 0.75rem; background: rgba(124, 92, 255, 0.08); border: 1px solid rgba(124, 92, 255, 0.25); border-radius: 8px; padding: 0.6rem 0.75rem;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #c4b5fd; cursor: pointer; user-select: none;">
+            <input type="checkbox" name="is_anonymous" value="1" style="width: 16px; height: 16px; min-height: 16px; accent-color: #7c5cff;">
+            <span>🔒 <strong>Post Anonymously</strong> (Hides your name; for pads, meds & sensitive needs)</span>
+          </label>
+        </div>
+
+        <button class="btn btn-primary btn-full" type="submit" style="background: linear-gradient(135deg, #a78bfa, #7c5cff); color: #fff; margin-top: 1rem;">
           Post Request 📢
         </button>
       </form>
