@@ -978,36 +978,38 @@ def delete_community(comm_id):
 # ════════════════════════════════════════════
 #  DATABASE INIT & MIGRATION ON STARTUP
 # ════════════════════════════════════════════
-with app.app_context():
-    db.create_all()     # creates any missing tables
-    try:
+def init_db():
+    with app.app_context():
+        db.create_all()     # creates any missing tables
         from sqlalchemy import inspect as sa_inspect, text
         insp = sa_inspect(db.engine)
         tables = insp.get_table_names()
         is_pg = "postgresql" in str(app.config.get("SQLALCHEMY_DATABASE_URI", ""))
         user_tbl_name = '"user"' if is_pg else 'user'
+        bool_default = "FALSE" if is_pg else "0"
+        time_type = "TIMESTAMP" if is_pg else "DATETIME"
 
         if "item" in tables:
             item_cols = {c["name"] for c in insp.get_columns("item")}
             with db.engine.begin() as conn:
-                if "condition"  not in item_cols:
-                    conn.execute(text("ALTER TABLE item ADD COLUMN condition  VARCHAR(20) DEFAULT 'used'"))
-                if "price"        not in item_cols:
-                    conn.execute(text("ALTER TABLE item ADD COLUMN price        FLOAT       DEFAULT 0.0"))
+                if "condition" not in item_cols:
+                    conn.execute(text("ALTER TABLE item ADD COLUMN condition VARCHAR(20) DEFAULT 'used'"))
+                if "price" not in item_cols:
+                    conn.execute(text("ALTER TABLE item ADD COLUMN price FLOAT DEFAULT 0.0"))
                 if "payment_mode" not in item_cols:
                     conn.execute(text("ALTER TABLE item ADD COLUMN payment_mode VARCHAR(30) DEFAULT 'both'"))
-                if "is_taken"     not in item_cols:
-                    conn.execute(text("ALTER TABLE item ADD COLUMN is_taken   BOOLEAN     DEFAULT FALSE"))
+                if "is_taken" not in item_cols:
+                    conn.execute(text(f"ALTER TABLE item ADD COLUMN is_taken BOOLEAN DEFAULT {bool_default}"))
                 if "created_at" not in item_cols:
-                    conn.execute(text("ALTER TABLE item ADD COLUMN created_at TIMESTAMP"))
+                    conn.execute(text(f"ALTER TABLE item ADD COLUMN created_at {time_type}"))
 
         if "user" in tables:
             user_cols = {c["name"] for c in insp.get_columns("user")}
             with db.engine.begin() as conn:
                 if "college_name" not in user_cols:
                     conn.execute(text(f"ALTER TABLE {user_tbl_name} ADD COLUMN college_name VARCHAR(120) DEFAULT 'My Campus'"))
-                if "upi_id"       not in user_cols:
-                    conn.execute(text(f"ALTER TABLE {user_tbl_name} ADD COLUMN upi_id       VARCHAR(100)"))
+                if "upi_id" not in user_cols:
+                    conn.execute(text(f"ALTER TABLE {user_tbl_name} ADD COLUMN upi_id VARCHAR(100)"))
                 if "phone_number" not in user_cols:
                     conn.execute(text(f"ALTER TABLE {user_tbl_name} ADD COLUMN phone_number VARCHAR(20)"))
 
@@ -1015,11 +1017,14 @@ with app.app_context():
             req_cols = {c["name"] for c in insp.get_columns("item_request")}
             with db.engine.begin() as conn:
                 if "is_anonymous" not in req_cols:
-                    conn.execute(text("ALTER TABLE item_request ADD COLUMN is_anonymous BOOLEAN DEFAULT FALSE"))
+                    conn.execute(text(f"ALTER TABLE item_request ADD COLUMN is_anonymous BOOLEAN DEFAULT {bool_default}"))
                 if "delivery_tip" not in req_cols:
                     conn.execute(text("ALTER TABLE item_request ADD COLUMN delivery_tip FLOAT DEFAULT 0.0"))
-    except Exception as e:
-        print(f"Migration note: {e}")
+
+try:
+    init_db()
+except Exception as e:
+    print(f"Database bootstrap note (non-fatal): {e}")
 
 
 if __name__ == "__main__":
