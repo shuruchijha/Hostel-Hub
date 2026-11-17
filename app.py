@@ -512,10 +512,6 @@ def add_request():
         tip_msg = f" (+₹{int(delivery_tip)} room delivery tip)" if delivery_tip > 0 else ""
         flash(f'Your request for "{name}"{tip_msg} is now live! Friends nearby can see and help you. 📢')
     return redirect(url_for("dashboard", tab="requests"))
-        db.session.add(req)
-        db.session.commit()
-        flash(f'Your request for "{name}" is now live! Friends nearby can see and help you. 📢')
-    return redirect(url_for("dashboard", tab="requests"))
 
 
 @app.route("/request/<int:req_id>/fulfill", methods=["POST"])
