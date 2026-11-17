@@ -1,3 +1,4 @@
+import os
 from urllib.parse import quote
 import secrets
 from datetime import datetime
@@ -9,21 +10,58 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__, static_folder="static")
-app.secret_key = "change-this-to-a-long-random-string-in-production"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///hostel3.db"
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_size": 10,
-    "pool_timeout": 30,
-    "pool_recycle": 300,
-    "max_overflow": 20,
-}
+app.secret_key = os.environ.get("SECRET_KEY", "midnight-pantry-secret-key-prod-2026")
+
+# Database URI: uses cloud PostgreSQL if DATABASE_URL is set, otherwise local SQLite
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    # Render and Supabase often provide "postgres://" which SQLAlchemy 1.4+ requires as "postgresql://"
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_size": 10,
+        "pool_timeout": 30,
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+        "max_overflow": 20,
+    }
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///hostel3.db"
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {}
+
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 86400  # Cache static files 24h
 db = SQLAlchemy(app)
 
-HOSTELS = ["Girls Hostel", "Boys Hostel"]
+POPULAR_COLLEGES = [
+    "IIT Bombay", "IIT Delhi", "IIT Madras", "IIT Kanpur", "IIT Kharagpur",
+    "IIT Roorkee", "IIT Guwahati", "IIT BHU Varanasi", "IIT Hyderabad",
+    "BITS Pilani", "BITS Goa", "BITS Hyderabad",
+    "NIT Trichy", "NIT Surathkal", "NIT Rourkela", "NIT Warangal", "NIT Calicut",
+    "VIT Vellore", "VIT Chennai", "SRM University Chennai", "KIIT Bhubaneswar",
+    "Manipal Academy of Higher Education (MAHE)", "Thapar University Patiala",
+    "Delhi University (DU)", "Jadavpur University", "Anna University",
+    "DTU Delhi", "NSUT Delhi", "IIIT Hyderabad", "IIIT Bangalore", "IIIT Delhi",
+    "Aligarh Muslim University (AMU)", "Banaras Hindu University (BHU)",
+    "Amity University Noida", "Lovely Professional University (LPU)",
+    "Symbiosis International Pune", "Christ University Bengaluru",
+]
+
+POPULAR_HOSTELS = [
+    "Girls Hostel", "Boys Hostel",
+    "Hostel 1", "Hostel 2", "Hostel 3", "Hostel 4", "Hostel 5",
+    "Hostel 6", "Hostel 7", "Hostel 8", "Hostel 9", "Hostel 10",
+    "Hostel 11", "Hostel 12", "Hostel 13", "Hostel 14", "Hostel 15",
+    "Ganga Hostel", "Yamuna Hostel", "Kaveri Hostel", "Narmada Hostel",
+    "Godavari Hostel", "Saraswati Hostel", "Aryabhatta Bhavan", "Ramanujan Bhavan",
+    "Tagore Hall", "Visvesvaraya Hostel", "Mega Boys Hostel", "Mega Girls Hostel",
+]
+HOSTELS = POPULAR_HOSTELS
 GIRLS_BLOCKS = ["Krishnaveni", "Bhima", "Tungabhadra", "Munneru", "Ghataprabha"]
+
 CATEGORIES = {
     "Food": "🍜",
+    "Cycle & Mobility": "🚲",
     "Toiletries & Hygiene": "🧴",
     "Medicine": "💊",
     "Campus Gear & Electronics": "🔌",
@@ -50,6 +88,7 @@ URGENCIES = {
 class User(db.Model):
     id            = db.Column(db.Integer, primary_key=True)
     name          = db.Column(db.String(80),  nullable=False)
+    college_name  = db.Column(db.String(120), nullable=False, default="My Campus")
     room_no       = db.Column(db.String(20),  nullable=False)   # Protected room number
     hostel_name   = db.Column(db.String(80))
     block         = db.Column(db.String(80))
@@ -92,6 +131,7 @@ class ItemRequest(db.Model):
     category     = db.Column(db.String(40), default="Other")
     urgency      = db.Column(db.String(20), default="tonight") # urgent | tonight | anytime
     price_offer  = db.Column(db.Float, default=0.0)             # willing to pay in INR
+    delivery_tip = db.Column(db.Float, default=0.0)             # room doorstep delivery tip
     note         = db.Column(db.String(200), nullable=True)     # optional note
     is_fulfilled = db.Column(db.Boolean, default=False)
     is_anonymous = db.Column(db.Boolean, default=False)         # Hide name for sensitive items (pads/meds)
@@ -157,7 +197,13 @@ def inject_globals():
 
 
 def other_hostel_of(h):
-    return "Boys Hostel" if h == "Girls Hostel" else "Girls Hostel"
+    if not h:
+        return "Other Hostel"
+    if "girl" in h.lower():
+        return "Boys Hostel"
+    if "boy" in h.lower():
+        return "Girls Hostel"
+    return "Other Hostels"
 
 
 def _shared_community(a: User, b: User) -> bool:
@@ -168,25 +214,30 @@ def _shared_community(a: User, b: User) -> bool:
 
 
 def can_see_profile(viewer: User, target: User) -> bool:
-    """Profile is visible only to same-hostel students or shared-community members."""
+    """Profile is visible only to same-college students or shared-community members."""
+    if not viewer or not target:
+        return False
+    if viewer.college_name != target.college_name:
+        return False
     if viewer.id == target.id:
         return True
-    if viewer.hostel_name == target.hostel_name:
+    if viewer.hostel_name and target.hostel_name and viewer.hostel_name.strip().lower() == target.hostel_name.strip().lower():
         return True
     return _shared_community(viewer, target)
 
 
 def can_see_room_no(viewer: User, target: User) -> bool:
-    """Room no is visible only to people within the same hostel (e.g. Girls Hostel sees Girls Hostel rooms,
-       boys or outsiders cannot see girls' room numbers)."""
+    """Room no is visible only to people within the same college AND same hostel."""
     if not viewer or not target:
+        return False
+    if viewer.college_name != target.college_name:
         return False
     if viewer.id == target.id:
         return True
-    if target.hostel_name == "Girls Hostel":
-        return viewer.hostel_name == "Girls Hostel"
-    if target.hostel_name == "Boys Hostel":
-        return viewer.hostel_name == "Boys Hostel"
+    if viewer.hostel_name and target.hostel_name and viewer.hostel_name.strip().lower() == target.hostel_name.strip().lower():
+        if "girl" in target.hostel_name.lower():
+            return "girl" in viewer.hostel_name.lower()
+        return True
     return False
 
 
@@ -242,18 +293,21 @@ def signup():
 
     error = None
     if request.method == "POST":
-        name     = request.form.get("name", "").strip()
-        email    = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
+        name             = request.form.get("name", "").strip()
+        college_name     = request.form.get("college_name", "").strip()
+        hostel           = request.form.get("hostel_name", "").strip()
+        block            = request.form.get("block", "").strip()
+        room_no          = request.form.get("room_no", "").strip()
+        email            = request.form.get("email", "").strip().lower()
+        password         = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
-        hostel   = request.form.get("hostel_name", "")
-        block    = request.form.get("block", "").strip()
-        room_no  = request.form.get("room_no", "").strip()
 
         if not name or not room_no or not email:
             error = "Please fill in your name, room number and email."
-        elif hostel not in HOSTELS:
-            error = "Please choose your hostel."
+        elif not college_name:
+            error = "Please select or type your College / University."
+        elif not hostel:
+            error = "Please select or type your Hostel."
         elif len(password) < 6:
             error = "Password must be at least 6 characters."
         elif confirm_password and password != confirm_password:
@@ -263,19 +317,20 @@ def signup():
 
         if not error:
             user = User(
-                name=name, room_no=room_no, hostel_name=hostel,
-                block=block, email=email,
+                name=name, college_name=college_name, room_no=room_no,
+                hostel_name=hostel, block=block, email=email,
                 password_hash=generate_password_hash(password),
             )
             db.session.add(user)
             db.session.commit()
             session["user_id"] = user.id
-            flash("Welcome aboard! Your profile is ready. 🎉")
+            flash("Welcome aboard! Your campus profile is ready. 🎉")
             after = session.pop("after_login", None)
             return redirect(after or url_for("dashboard"))
 
     return render_template("signup.html", error=error, form=request.form,
-                           hostels=HOSTELS, blocks=GIRLS_BLOCKS)
+                           hostels=POPULAR_HOSTELS, blocks=GIRLS_BLOCKS,
+                           popular_colleges=POPULAR_COLLEGES, popular_hostels=POPULAR_HOSTELS)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -314,7 +369,7 @@ def forgot_password():
             error = "Please provide your email, hostel, and room number."
         elif not user:
             error = "No account found with this college email."
-        elif user.hostel_name != hostel or user.room_no.strip().lower() != room_no.lower():
+        elif (user.hostel_name or "").strip().lower() != hostel.lower() or (user.room_no or "").strip().lower() != room_no.lower():
             error = "Security verification failed: Hostel or Room Number does not match our records."
         elif len(new_password) < 6:
             error = "New password must be at least 6 characters long."
@@ -326,7 +381,8 @@ def forgot_password():
             flash("Password reset successfully! You can now log in with your new password. ✓")
             return redirect(url_for("login"))
 
-    return render_template("forgot_password.html", error=error, hostels=HOSTELS, form=request.form)
+    return render_template("forgot_password.html", error=error, hostels=POPULAR_HOSTELS,
+                           popular_hostels=POPULAR_HOSTELS, form=request.form)
 
 
 @app.route("/logout")
@@ -348,8 +404,10 @@ def dashboard():
     tab       = request.args.get("tab", "shelf").strip() # "shelf" or "requests"
     searching = bool(q or category)
 
-    # 1. Available Items on Shelf
-    base = db.session.query(Item, User).join(User, Item.user_id == User.id)
+    # 1. Available Items on Shelf (STRICT COLLEGE ISOLATION)
+    base = db.session.query(Item, User).join(User, Item.user_id == User.id).filter(
+        User.college_name == user.college_name
+    )
 
     same = base.filter(
         User.hostel_name == user.hostel_name,
@@ -377,10 +435,14 @@ def dashboard():
 
     my_items = Item.query.filter_by(user_id=user.id).order_by(Item.id.desc()).all()
 
-    # 2. Student Requests ("Who is looking for what")
+    # 2. Student Requests ("Who is looking for what") (STRICT COLLEGE ISOLATION)
     req_base = (db.session.query(ItemRequest, User)
                 .join(User, ItemRequest.user_id == User.id)
-                .filter(User.hostel_name == user.hostel_name, ItemRequest.is_fulfilled == False))
+                .filter(
+                    User.college_name == user.college_name,
+                    User.hostel_name == user.hostel_name,
+                    ItemRequest.is_fulfilled == False
+                ))
 
     if searching:
         if q:
@@ -408,12 +470,13 @@ def dashboard():
 @app.route("/request/add", methods=["POST"])
 @login_required
 def add_request():
-    user        = current_user()
-    name        = request.form.get("name", "").strip()[:100]
-    category    = request.form.get("category", "Other")
-    urgency     = request.form.get("urgency", "tonight")
-    price_str   = request.form.get("price_offer", "0").strip()
-    note        = request.form.get("note", "").strip()[:200]
+    user         = current_user()
+    name         = request.form.get("name", "").strip()[:100]
+    category     = request.form.get("category", "Other")
+    urgency      = request.form.get("urgency", "tonight")
+    price_str    = request.form.get("price_offer", "0").strip()
+    delivery_str = request.form.get("delivery_tip", "0").strip()
+    note         = request.form.get("note", "").strip()[:200]
 
     if category not in CATEGORIES:
         category = "Other"
@@ -425,6 +488,11 @@ def add_request():
     except (ValueError, TypeError):
         price_offer = 0.0
 
+    try:
+        delivery_tip = max(0.0, float(delivery_str))
+    except (ValueError, TypeError):
+        delivery_tip = 0.0
+
     if not name:
         flash("Please type what you are looking for.")
     else:
@@ -435,9 +503,15 @@ def add_request():
             category=category,
             urgency=urgency,
             price_offer=price_offer,
+            delivery_tip=delivery_tip,
             note=note,
             is_anonymous=is_anon,
         )
+        db.session.add(req)
+        db.session.commit()
+        tip_msg = f" (+₹{int(delivery_tip)} room delivery tip)" if delivery_tip > 0 else ""
+        flash(f'Your request for "{name}"{tip_msg} is now live! Friends nearby can see and help you. 📢')
+    return redirect(url_for("dashboard", tab="requests"))
         db.session.add(req)
         db.session.commit()
         flash(f'Your request for "{name}" is now live! Friends nearby can see and help you. 📢')
@@ -593,11 +667,12 @@ def profile(user_id):
 def settings():
     user = current_user()
     if request.method == "POST":
-        name     = request.form.get("name", "").strip()[:80]
-        hostel   = request.form.get("hostel_name", "").strip()
-        block    = request.form.get("block", "").strip()[:80]
-        room_no  = request.form.get("room_no", "").strip()[:20]
-        phone    = request.form.get("phone_number", "").strip()[:20]
+        name         = request.form.get("name", "").strip()[:80]
+        college_name = request.form.get("college_name", "").strip()[:120]
+        hostel       = request.form.get("hostel_name", "").strip()[:80]
+        block        = request.form.get("block", "").strip()[:80]
+        room_no      = request.form.get("room_no", "").strip()[:20]
+        phone        = request.form.get("phone_number", "").strip()[:20]
         upi          = request.form.get("upi_id", "").strip()[:100]
         current_pass = request.form.get("current_password", "").strip()
         new_pass     = request.form.get("new_password", "").strip()
@@ -606,14 +681,16 @@ def settings():
         if not name or not room_no:
             flash("Name and room number cannot be empty.")
             return redirect(url_for("settings"))
-        if hostel not in HOSTELS:
-            flash("Please choose a valid hostel.")
+        if not hostel:
+            flash("Please enter your hostel name.")
             return redirect(url_for("settings"))
         if upi and "@" not in upi:
             flash("UPI ID should look like yourname@upi or 9876543210@paytm.")
             return redirect(url_for("settings"))
 
         user.name = name
+        if college_name:
+            user.college_name = college_name
         user.hostel_name = hostel
         user.block = block
         user.room_no = room_no
@@ -637,7 +714,9 @@ def settings():
         flash("Personal profile and payment details updated successfully! ✓")
         return redirect(url_for("settings"))
 
-    return render_template("settings.html", user=user, hostels=HOSTELS, blocks=GIRLS_BLOCKS)
+    return render_template("settings.html", user=user, hostels=POPULAR_HOSTELS,
+                           popular_colleges=POPULAR_COLLEGES, popular_hostels=POPULAR_HOSTELS,
+                           blocks=GIRLS_BLOCKS)
 
 
 # ════════════════════════════════════════════
@@ -670,8 +749,9 @@ def chat_inbox():
                     "unread_count": unread
                 }
 
-    # Available contacts: people in same hostel + shared communities
+    # Available contacts: people in same college and same hostel + shared communities
     same_hostel_students = User.query.filter(
+        User.college_name == user.college_name,
         User.hostel_name == user.hostel_name,
         User.id != user.id
     ).order_by(User.name.asc()).all()
@@ -904,6 +984,9 @@ with app.app_context():
         from sqlalchemy import inspect as sa_inspect, text
         insp = sa_inspect(db.engine)
         tables = insp.get_table_names()
+        is_pg = "postgresql" in str(app.config.get("SQLALCHEMY_DATABASE_URI", ""))
+        user_tbl_name = '"user"' if is_pg else 'user'
+
         if "item" in tables:
             item_cols = {c["name"] for c in insp.get_columns("item")}
             with db.engine.begin() as conn:
@@ -914,21 +997,27 @@ with app.app_context():
                 if "payment_mode" not in item_cols:
                     conn.execute(text("ALTER TABLE item ADD COLUMN payment_mode VARCHAR(30) DEFAULT 'both'"))
                 if "is_taken"     not in item_cols:
-                    conn.execute(text("ALTER TABLE item ADD COLUMN is_taken   BOOLEAN     DEFAULT 0"))
+                    conn.execute(text("ALTER TABLE item ADD COLUMN is_taken   BOOLEAN     DEFAULT FALSE"))
                 if "created_at" not in item_cols:
-                    conn.execute(text("ALTER TABLE item ADD COLUMN created_at DATETIME"))
+                    conn.execute(text("ALTER TABLE item ADD COLUMN created_at TIMESTAMP"))
+
         if "user" in tables:
             user_cols = {c["name"] for c in insp.get_columns("user")}
             with db.engine.begin() as conn:
+                if "college_name" not in user_cols:
+                    conn.execute(text(f"ALTER TABLE {user_tbl_name} ADD COLUMN college_name VARCHAR(120) DEFAULT 'My Campus'"))
                 if "upi_id"       not in user_cols:
-                    conn.execute(text("ALTER TABLE user ADD COLUMN upi_id       VARCHAR(100)"))
+                    conn.execute(text(f"ALTER TABLE {user_tbl_name} ADD COLUMN upi_id       VARCHAR(100)"))
                 if "phone_number" not in user_cols:
-                    conn.execute(text("ALTER TABLE user ADD COLUMN phone_number VARCHAR(20)"))
+                    conn.execute(text(f"ALTER TABLE {user_tbl_name} ADD COLUMN phone_number VARCHAR(20)"))
+
         if "item_request" in tables:
             req_cols = {c["name"] for c in insp.get_columns("item_request")}
             with db.engine.begin() as conn:
                 if "is_anonymous" not in req_cols:
-                    conn.execute(text("ALTER TABLE item_request ADD COLUMN is_anonymous BOOLEAN DEFAULT 0"))
+                    conn.execute(text("ALTER TABLE item_request ADD COLUMN is_anonymous BOOLEAN DEFAULT FALSE"))
+                if "delivery_tip" not in req_cols:
+                    conn.execute(text("ALTER TABLE item_request ADD COLUMN delivery_tip FLOAT DEFAULT 0.0"))
     except Exception as e:
         print(f"Migration note: {e}")
 

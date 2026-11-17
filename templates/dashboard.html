@@ -419,8 +419,9 @@
         <div>
           <h2>Hey, {{ me.name.split()[0] }} 👋</h2>
           <p>
-            {{ me.hostel_name }}{% if me.block %} · {{ me.block }}{% endif %}
-            · Room {{ me.room_no }} (Private to you)
+            <strong style="color: var(--amber);">{{ me.college_name if me.college_name else 'My Campus' }}</strong>
+            · {{ me.hostel_name }}{% if me.block %} · {{ me.block }}{% endif %}
+            · Room {{ me.room_no }} (Private)
           </p>
         </div>
       </div>
@@ -428,7 +429,7 @@
         <button type="button" id="pwaInstallBtn" onclick="triggerPWAInstall()" class="btn btn-sm" style="background: rgba(245, 166, 35, 0.18); color: var(--amber-bright); border: 1px solid rgba(245, 166, 35, 0.4); font-size: 0.76rem; padding: 4px 8px;">
           📲 Install App
         </button>
-        <a href="https://api.whatsapp.com/send?text={{ ('🌙 *Midnight Pantry — Our Hostel Hub*\nCheck what fellow students in ' ~ me.hostel_name ~ ' have or need right now:\n' ~ request.url_root)|urlencode }}"
+        <a href="https://api.whatsapp.com/send?text={{ ('🌙 *Midnight Pantry — ' ~ (me.college_name or 'Our Campus') ~ '*\nCheck what fellow hostellers in ' ~ me.hostel_name ~ ' have or need right now:\n' ~ request.url_root)|urlencode }}"
            target="_blank" rel="noopener"
            class="btn btn-sm"
            style="background: rgba(37, 211, 102, 0.15); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.35); font-size: 0.76rem; padding: 4px 8px;"
@@ -541,6 +542,13 @@
                   {% endif %}
                 </div>
 
+                <!-- Room Delivery Tip Badge -->
+                {% if req.delivery_tip and req.delivery_tip > 0 %}
+                  <div style="font-size: 0.8rem; font-weight: 700; color: #34d399; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 5px; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.25); border-radius: 6px; padding: 3px 8px; width: fit-content;">
+                    🛵 <span>Room delivery tip: +₹{{ req.delivery_tip|int }}</span>
+                  </div>
+                {% endif %}
+
                 <!-- Note if any -->
                 {% if req.note %}
                   <div class="request-note-box">
@@ -579,7 +587,7 @@
                 {% endif %}
 
                 <!-- 1-Tap Forward to WhatsApp Group -->
-                <a href="https://api.whatsapp.com/send?text={{ ('🚨 *Midnight Pantry Need*\nLooking for: *' ~ req.name ~ '*\nHostel: ' ~ requester.hostel_name ~ (', ' ~ requester.block if requester.block else '') ~ '\n' ~ ('Urgency: ' ~ req.urgency ~ '\n') ~ '\nGot it? Tap to help directly:\n' ~ request.url_root ~ 'chat/' ~ requester.id)|urlencode }}"
+                <a href="https://api.whatsapp.com/send?text={{ ('🚨 *Campus Need on Midnight Pantry*\nLooking for: *' ~ req.name ~ '*\nCampus: ' ~ (requester.college_name or 'Our Campus') ~ '\nHostel: ' ~ requester.hostel_name ~ (', ' ~ requester.block if requester.block else '') ~ '\n' ~ ('Urgency: ' ~ req.urgency ~ '\n') ~ (('🛵 Delivery tip: +₹' ~ req.delivery_tip|int ~ '\n') if req.delivery_tip > 0 else '') ~ '\nGot it? Tap to connect directly:\n' ~ request.url_root ~ 'chat/' ~ requester.id)|urlencode }}"
                    target="_blank" rel="noopener"
                    class="btn btn-ghost btn-sm"
                    style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 5px; color: #25D366; border-color: rgba(37, 211, 102, 0.3); font-size: 0.74rem; padding: 4px 6px;"
@@ -825,6 +833,20 @@
           </label>
           <input id="req-note" type="text" name="note"
                  placeholder="e.g. Need for 30 mins to charge phone" maxlength="200">
+        </div>
+
+        <!-- Room Delivery Tip Option -->
+        <div class="field" style="margin-top: 0.75rem;">
+          <label class="field-label" for="req-delivery">
+            <span>🛵 Room Delivery Option</span>
+            <span class="field-opt">Micro-fee</span>
+          </label>
+          <select id="req-delivery" name="delivery_tip">
+            <option value="0">🚶 I'll self-pickup from their room (₹0)</option>
+            <option value="2">🚪 Deliver to my door (+₹2 tip)</option>
+            <option value="5">🚪 Deliver to my door (+₹5 tip)</option>
+            <option value="10">⚡ Fast Room Delivery (+₹10 tip)</option>
+          </select>
         </div>
 
         <!-- Anonymous / Safe Request Option -->

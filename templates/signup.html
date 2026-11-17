@@ -160,15 +160,41 @@
                  placeholder="e.g. Priya Sharma" required autocomplete="name">
         </div>
 
+        <!-- College / University Selection -->
+        <div class="field field-spacing">
+          <label class="field-label" for="college_name">
+            <span>College / University</span>
+            <span class="field-opt">Select or Type</span>
+          </label>
+          <input id="college_name" type="text" name="college_name" list="collegeList"
+                 value="{{ form.get('college_name', '') }}"
+                 placeholder="e.g. IIT Bombay, BITS Pilani, VIT, or type yours…"
+                 required autocomplete="organization">
+          <datalist id="collegeList">
+            {% for col in popular_colleges %}
+              <option value="{{ col }}">
+            {% endfor %}
+          </datalist>
+          <div style="font-size: 0.74rem; color: var(--text-faint); margin-top: 4px;">
+            🔒 Data is isolated to your campus. Students outside cannot view your shelf or rooms.
+          </div>
+        </div>
+
         <!-- Hostel Selection -->
         <div class="field field-spacing">
-          <label class="field-label" for="hostel_name">Hostel</label>
-          <select id="hostel_name" name="hostel_name" required>
-            <option value="" disabled {{ 'selected' if not form.get('hostel_name') }}>Select your hostel…</option>
-            {% for h in hostels %}
-              <option value="{{ h }}" {{ 'selected' if form.get('hostel_name') == h }}>{{ h }}</option>
+          <label class="field-label" for="hostel_name">
+            <span>Hostel Name</span>
+            <span class="field-opt">Select or Type</span>
+          </label>
+          <input id="hostel_name" type="text" name="hostel_name" list="hostelList"
+                 value="{{ form.get('hostel_name', '') }}"
+                 placeholder="e.g. Girls Hostel, Boys Hostel, Hostel 7, Ganga…"
+                 required autocomplete="off">
+          <datalist id="hostelList">
+            {% for h in popular_hostels %}
+              <option value="{{ h }}">
             {% endfor %}
-          </select>
+          </datalist>
         </div>
 
         <!-- Block & Room No (STRICT HORIZONTAL SINGLE LINE) -->
