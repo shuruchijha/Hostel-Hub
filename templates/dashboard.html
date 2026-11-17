@@ -132,7 +132,7 @@
   }
   @media (max-width: 860px) {
     .dash { grid-template-columns: 1fr; padding: 1rem 0.75rem 5rem; }
-    .dash-sidebar { order: -1; }
+    .dash-sidebar { order: 2; margin-top: 1.5rem; }
   }
 
   /* ── FEED TABS ── */
@@ -424,7 +424,10 @@
           </p>
         </div>
       </div>
-      <div style="display: flex; gap: 6px;">
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <button type="button" onclick="openRulesModal()" class="btn btn-ghost btn-sm" title="Night Owl Community Rules">
+          💡 Rules
+        </button>
         <a href="{{ url_for('chat_inbox') }}" class="btn btn-ghost btn-sm">
           💬 Chats
           {% if unread_chat_count %}

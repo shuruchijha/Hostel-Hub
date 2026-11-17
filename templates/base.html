@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>{% block title %}Midnight Pantry · Campus Night Essentials{% endblock %}</title>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
@@ -107,137 +107,67 @@
     button { cursor: pointer; font-family: inherit; }
 
     /* ═══════════════════════════════════════════
-       INTERACTIVE FLOATING TOOLS
+       COMMUNITY RULES MODAL (CENTERED POPUP)
     ═══════════════════════════════════════════ */
-    .floating-tools-container {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 999;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 12px;
-    }
-
-    /* Floating Quick Bar */
-    .quick-shelf-badge {
-      background: var(--surface-glass);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-pill);
-      padding: 8px 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      animation: pulseGlow 4s ease-in-out infinite;
-      cursor: pointer;
-      transition: var(--transition);
-      user-select: none;
-    }
-    .quick-shelf-badge:hover {
-      border-color: var(--amber);
-      color: var(--text);
-      transform: translateY(-2px);
-    }
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 10px var(--success);
-      animation: blink 2s infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-      50% { box-shadow: 0 10px 35px rgba(245, 166, 35, 0.25); }
-    }
-
-    /* Floating Action Button (FAB) */
-    .fab-btn {
-      width: 54px;
-      height: 54px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--amber-bright), #e08b15);
-      color: #0b0910;
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      box-shadow: 0 8px 24px rgba(245, 166, 35, 0.45);
-      transition: var(--transition);
-      cursor: pointer;
-      position: relative;
-    }
-    .fab-btn:hover {
-      transform: scale(1.1) rotate(8deg);
-      box-shadow: 0 12px 32px rgba(245, 166, 35, 0.6);
-    }
-    .fab-btn:active {
-      transform: scale(0.95);
-    }
-
-    /* Floating Quick Help / Rule Modal Card */
-    .floating-tips-modal {
+    .rules-modal-overlay {
       display: none;
       position: fixed;
-      bottom: 90px;
-      right: 24px;
-      width: 320px;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .rules-modal-box {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.25rem;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-      z-index: 1000;
-      backdrop-filter: blur(18px);
-      animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      padding: 1.5rem;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+      animation: popIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-    .floating-tips-modal.active { display: block; }
-    .floating-tips-header {
+    .rules-modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0.8rem;
+      margin-bottom: 1.1rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.6rem;
     }
-    .floating-tips-header h4 {
-      font-size: 0.95rem;
+    .rules-modal-header h4 {
+      font-size: 1.1rem;
       font-weight: 700;
+      color: var(--amber);
       display: flex;
       align-items: center;
       gap: 6px;
-      color: var(--amber);
     }
-    .floating-tips-close {
+    .rules-modal-close {
       background: none;
       border: none;
       color: var(--text-faint);
-      font-size: 1.1rem;
+      font-size: 1.25rem;
       cursor: pointer;
+      padding: 2px 6px;
     }
-    .floating-tips-close:hover { color: var(--text); }
+    .rules-modal-close:hover { color: var(--text); }
     .tip-item {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
-      margin-bottom: 0.6rem;
+      margin-bottom: 0.85rem;
       display: flex;
-      gap: 8px;
+      gap: 10px;
       align-items: flex-start;
+      line-height: 1.45;
     }
 
     @keyframes popIn {
-      from { opacity: 0; transform: translateY(12px) scale(0.95); }
+      from { opacity: 0; transform: translateY(12px) scale(0.96); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
@@ -790,40 +720,38 @@
 </head>
 <body>
 
-<!-- ───── FLOATING TOOL / HELP FAB ───── -->
-<div class="floating-tools-container" id="floatingTools">
-  
-  <!-- Floating Live Hostels Status Pill -->
-  <div class="quick-shelf-badge" onclick="toggleFloatingTips()" title="Click to view Night Rules & Tips">
-    <div class="status-dot"></div>
-    <span>Shelf Active Tonight · 1 AM Safe Share</span>
-    <span style="font-size: 1rem;">✨</span>
+<!-- ───── RULES MODAL (Clean popup, no floating buttons) ───── -->
+<div class="rules-modal-overlay" id="rulesModal" onclick="if(event.target === this) closeRulesModal()">
+  <div class="rules-modal-box">
+    <div class="rules-modal-header">
+      <h4><span>🌙</span> Midnight Pantry Safety Rules</h4>
+      <button type="button" class="rules-modal-close" onclick="closeRulesModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="tip-item">
+      <span style="font-size:1.2rem;">🔒</span>
+      <div>
+        <strong style="color:var(--text);">Room Privacy Guard:</strong><br>
+        Room numbers are confidential within your hostel. Cross-hostel visitors and outsiders never see your room number.
+      </div>
+    </div>
+    <div class="tip-item">
+      <span style="font-size:1.2rem;">🍜</span>
+      <div>
+        <strong style="color:var(--text);">Permitted Essentials:</strong><br>
+        Packaged food, toiletries, medicine, stationery & collegiate essentials.
+      </div>
+    </div>
+    <div class="tip-item">
+      <span style="font-size:1.2rem;">🤝</span>
+      <div>
+        <strong style="color:var(--text);">Direct UPI & Cash:</strong><br>
+        Zero commissions. Instant peer-to-peer payment via GPay, PhonePe, Paytm, BHIM or cash.
+      </div>
+    </div>
+    <button type="button" class="btn btn-primary btn-full" onclick="closeRulesModal()" style="margin-top:1rem;">
+      Got it ✓
+    </button>
   </div>
-
-  <!-- Interactive Floating Help / Night Mode Modal -->
-  <div class="floating-tips-modal" id="tipsModal">
-    <div class="floating-tips-header">
-      <h4><span>🌙</span> Night Owl Rules</h4>
-      <button class="floating-tips-close" onclick="toggleFloatingTips()" aria-label="Close">✕</button>
-    </div>
-    <div class="tip-item">
-      <span>🔒</span>
-      <span><strong>Privacy Guard:</strong> Your room number is confidential. Handover happens in designated common areas.</span>
-    </div>
-    <div class="tip-item">
-      <span>🍜</span>
-      <span><strong>Permitted items:</strong> Sealed packaged food, toiletries, emergency hygiene items & chargers.</span>
-    </div>
-    <div class="tip-item">
-      <span>🤝</span>
-      <span><strong>Honor system:</strong> Always return borrowed items or barter fairly with hostel mates.</span>
-    </div>
-  </div>
-
-  <!-- Floating Action Button -->
-  <button class="fab-btn" onclick="toggleFloatingTips()" aria-label="Quick Tips" title="Quick Campus Shelf Tips">
-    💡
-  </button>
 </div>
 
 <!-- ───── NAVBAR ───── -->
@@ -934,11 +862,15 @@
 </footer>
 
 <script>
-  function toggleFloatingTips() {
-    const modal = document.getElementById('tipsModal');
-    if (modal) {
-      modal.classList.toggle('active');
-    }
+  function openRulesModal(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const modal = document.getElementById('rulesModal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeRulesModal() {
+    const modal = document.getElementById('rulesModal');
+    if (modal) modal.style.display = 'none';
   }
 
   // Toggle password visibility (show/hide)
@@ -957,17 +889,6 @@
       btn.setAttribute("aria-label", "Show password");
     }
   }
-
-  // Close floating modal when clicking outside
-  document.addEventListener('click', function(event) {
-    const container = document.getElementById('floatingTools');
-    const modal = document.getElementById('tipsModal');
-    if (container && modal && modal.classList.contains('active')) {
-      if (!container.contains(event.target)) {
-        modal.classList.remove('active');
-      }
-    }
-  });
 </script>
 
 </body>
