@@ -13,20 +13,41 @@ app = Flask(__name__, static_folder="static")
 app.secret_key = os.environ.get("SECRET_KEY", "midnight-pantry-secret-key-prod-2026")
 
 # Database URI: uses cloud PostgreSQL if DATABASE_URL is set, otherwise local SQLite
-database_url = os.environ.get("DATABASE_URL")
-if database_url:
-    # Render and Supabase often provide "postgres://" which SQLAlchemy 1.4+ requires as "postgresql://"
-    if database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
-    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_size": 10,
-        "pool_timeout": 30,
-        "pool_recycle": 300,
-        "pool_pre_ping": True,
-        "max_overflow": 20,
-    }
-else:
+raw_db_url = (os.environ.get("DATABASE_URL") or "").strip().strip("'\"")
+if raw_db_url.startswith("DATABASE_URL="):
+    raw_db_url = raw_db_url.split("=", 1)[1].strip().strip("'\"")
+if raw_db_url.startswith("psql "):
+    raw_db_url = raw_db_url.replace("psql ", "").strip().strip("'\"")
+if raw_db_url.startswith("postgres://"):
+    raw_db_url = "postgresql://" + raw_db_url[len("postgres://"):]
+
+# Test cloud DB connection before committing to it so startup never crashes
+use_cloud_db = False
+if raw_db_url and ("postgresql" in raw_db_url):
+    try:
+        from sqlalchemy import create_engine, text
+        test_engine = create_engine(
+            raw_db_url,
+            connect_args={"connect_timeout": 5},
+            pool_pre_ping=True
+        )
+        with test_engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        test_engine.dispose()
+        use_cloud_db = True
+        app.config["SQLALCHEMY_DATABASE_URI"] = raw_db_url
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "pool_size": 10,
+            "pool_timeout": 30,
+            "pool_recycle": 300,
+            "pool_pre_ping": True,
+            "max_overflow": 20,
+        }
+        print("Connected to Cloud PostgreSQL database successfully!")
+    except Exception as err:
+        print(f"Cloud PostgreSQL could not connect ({err}). Safely falling back to local SQLite!")
+
+if not use_cloud_db:
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///hostel3.db"
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {}
 
