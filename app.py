@@ -69,7 +69,7 @@ db = SQLAlchemy(app)
 from colleges import ALL_COLLEGES
 from hostels import ALL_HOSTELS
 from blocks import ALL_BLOCKS
-from campus_directory import get_campus_data, CAMPUS_DATA
+from campus_directory import get_campus_data, CAMPUS_DATA, normalize_hostel_and_block
 
 POPULAR_COLLEGES = ALL_COLLEGES
 POPULAR_HOSTELS = ALL_HOSTELS
@@ -357,6 +357,9 @@ def signup():
             error = "An account with this email already exists."
 
         if not error:
+            # Intelligently normalize if student confused hostel with block
+            hostel, block = normalize_hostel_and_block(hostel, block, college_name)
+
             # Find referrer if ref_code provided
             referrer = None
             if ref_code:
@@ -858,6 +861,9 @@ def settings():
         if upi and "@" not in upi:
             flash("UPI ID should look like yourname@upi or 9876543210@paytm.")
             return redirect(url_for("settings"))
+
+        # Intelligently normalize if student confused hostel with block
+        hostel, block = normalize_hostel_and_block(hostel, block, college_name or user.college_name)
 
         user.name = name
         if college_name:

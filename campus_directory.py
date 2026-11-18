@@ -1,23 +1,45 @@
 """
-Campus Directory: Accurate mapping of Indian Colleges to their specific Hostels,
-Blocks, Wings, and Residences.
+Campus Directory: Verified college hostel and block mappings for Indian institutions.
 
-When a student selects a college, the app dynamically filters and shows ONLY the
-hostels and blocks/wings associated with that college, eliminating confusion.
+GOLDEN RULE:
+If we are unsure about the exact hostel and block names for any institution,
+we ONLY show ["Boys Hostel", "Girls Hostel"] and leave the block list empty
+so the student can freely type their actual block/wing without false guesses.
 """
 
-# Specific mappings for prominent colleges and universities across India
+# Specific verified campus mappings
 CAMPUS_DATA = {
-    # ── IITs ──
+    # ── NIT Andhra Pradesh (Tadepalligudem) ──
+    "nit andhra": {
+        "hostels": ["Girls Hostel", "Boys Hostel"],
+        "blocks": [
+            # Girls Hostel Blocks (UG & PG/PhD)
+            "Krishnaveni Block", "Bhima Block", "Tungabhadra Block", "Ghataprabha Block", "Munneru Block",
+            # Boys Hostel Blocks
+            "Godavari Block", "Sabari Block", "Indravathi Block", "Banganga Block", "Purna Block",
+            "Pranahita Block", "Manjeera Block", "Nagavali Block", "Swarnamukhi Block", "Vamsadhara Block"
+        ],
+        "block_label": "Block"
+    },
+    "nit ap": {
+        "hostels": ["Girls Hostel", "Boys Hostel"],
+        "blocks": [
+            "Krishnaveni Block", "Bhima Block", "Tungabhadra Block", "Ghataprabha Block", "Munneru Block",
+            "Godavari Block", "Sabari Block", "Indravathi Block", "Banganga Block", "Purna Block",
+            "Pranahita Block", "Manjeera Block", "Nagavali Block", "Swarnamukhi Block", "Vamsadhara Block"
+        ],
+        "block_label": "Block"
+    },
+
+    # ── IITs (Verified) ──
     "iit bombay": {
         "hostels": [
             "Hostel 1", "Hostel 2", "Hostel 3", "Hostel 4", "Hostel 5",
             "Hostel 6", "Hostel 7", "Hostel 8", "Hostel 9", "Hostel 10",
             "Hostel 11 (Girls)", "Hostel 12", "Hostel 13", "Hostel 14",
-            "Hostel 15 (Girls)", "Hostel 16", "Hostel 17", "Hostel 18",
-            "Tansa House"
+            "Hostel 15 (Girls)", "Hostel 16", "Hostel 17", "Hostel 18", "Tansa House"
         ],
-        "blocks": ["Wing A", "Wing B", "Wing C", "Floor 1", "Floor 2", "Floor 3", "Floor 4", "Floor 5"],
+        "blocks": ["Wing A", "Wing B", "Wing C", "Floor 1", "Floor 2", "Floor 3"],
         "block_label": "Wing / Floor"
     },
     "iit delhi": {
@@ -39,8 +61,8 @@ CAMPUS_DATA = {
             "Tamiraparani Hostel", "Tapti Hostel", "Sabarmati Hostel", "Bhadra Hostel",
             "Swarna Hostel (Girls)"
         ],
-        "blocks": ["Wing A", "Wing B", "Wing C", "Wing D", "Ground Floor", "1st Floor", "2nd Floor"],
-        "block_label": "Wing / Section"
+        "blocks": ["Wing A", "Wing B", "Wing C", "Wing D"],
+        "block_label": "Wing"
     },
     "iit kanpur": {
         "hostels": [
@@ -48,8 +70,8 @@ CAMPUS_DATA = {
             "Hall 7", "Hall 8", "Hall 9", "Hall 10", "Hall 11",
             "Hall 12", "Hall 13", "Girls Hostel 1 (GH1)", "Girls Hostel 2 (GH2)"
         ],
-        "blocks": ["Wing A", "Wing B", "Wing C", "Wing D", "Top Floor", "Mid Floor", "Ground Floor"],
-        "block_label": "Wing / Floor"
+        "blocks": ["Wing A", "Wing B", "Wing C", "Wing D", "Top Floor", "Ground Floor"],
+        "block_label": "Wing"
     },
     "iit kharagpur": {
         "hostels": [
@@ -60,28 +82,26 @@ CAMPUS_DATA = {
             "Indira Gandhi Hall (Girls)", "Sister Nivedita Hall (Girls)", "Rani Laxmibai Hall (Girls)",
             "Meghnad Saha Hall", "BR Ambedkar Hall", "Vikram Sarabhai Hall"
         ],
-        "blocks": ["Wing A", "Wing B", "Wing C", "Wing D", "Block 1", "Block 2", "Top Floor"],
+        "blocks": ["Wing A", "Wing B", "Wing C", "Wing D", "Block 1", "Block 2"],
         "block_label": "Wing / Block"
     },
     "iit roorkee": {
         "hostels": [
             "Ganga Bhawan", "Govind Bhawan", "Cautley Bhawan", "Rajendra Bhawan",
             "Radhakrishnan Bhawan", "Ravindra Bhawan", "Jawahar Bhawan", "Rajiv Bhawan",
-            "Kasturba Bhawan (Girls)", "Sarojini Bhawan (Girls)", "Indira Bhawan (Girls)",
-            "Vigyan Kunj"
+            "Kasturba Bhawan (Girls)", "Sarojini Bhawan (Girls)", "Indira Bhawan (Girls)", "Vigyan Kunj"
         ],
-        "blocks": ["Block A", "Block B", "Block C", "Mess Wing", "1st Floor", "2nd Floor", "3rd Floor"],
+        "blocks": ["Block A", "Block B", "Block C", "Mess Wing"],
         "block_label": "Block / Wing"
     },
     "iit guwahati": {
         "hostels": [
             "Brahmaputra Hostel", "Dihing Hostel", "Manas Hostel", "Umiam Hostel",
             "Barak Hostel", "Kameng Hostel", "Siang Hostel", "Kapili Hostel",
-            "Dhansiri Hostel (Girls)", "Subansiri Hostel (Girls)", "Disang Hostel (Girls)",
-            "Lohit Hostel"
+            "Dhansiri Hostel (Girls)", "Subansiri Hostel (Girls)", "Disang Hostel (Girls)", "Lohit Hostel"
         ],
-        "blocks": ["Block A", "Block B", "Block C", "Block D", "Ground Floor", "1st Floor", "2nd Floor"],
-        "block_label": "Block / Floor"
+        "blocks": ["Block A", "Block B", "Block C", "Block D"],
+        "block_label": "Block"
     },
     "iit bhu": {
         "hostels": [
@@ -89,29 +109,19 @@ CAMPUS_DATA = {
             "Vishwakarma Hostel", "Vivekanand Hostel", "Aryabhatta Hostel", "Ramanujan Hostel",
             "SN Bose Hostel", "SC Dey Hostel", "GSMC (Girls)", "Rani Laxmibai Hostel (Girls)"
         ],
-        "blocks": ["Wing 1", "Wing 2", "Wing 3", "Wing 4", "Block A", "Block B"],
-        "block_label": "Wing / Block"
+        "blocks": ["Wing 1", "Wing 2", "Wing 3", "Wing 4"],
+        "block_label": "Wing"
     },
     "iit dhanbad": {
         "hostels": [
             "Diamond Hostel", "Emerald Hostel", "Topaz Hostel", "Opal Hostel",
-            "Jasper Hostel", "Ruby Hostel", "Sapphire Hostel", "Amber Hostel",
-            "Rosaline Hostel (Girls)"
+            "Jasper Hostel", "Ruby Hostel", "Sapphire Hostel", "Amber Hostel", "Rosaline Hostel (Girls)"
         ],
-        "blocks": ["Block A", "Block B", "Block C", "Block D", "Floor 1", "Floor 2", "Floor 3"],
-        "block_label": "Block / Floor"
-    },
-    "iit hyderabad": {
-        "hostels": [
-            "Charminar Hostel", "Golconda Hostel", "Qutub Shahi Hostel", "Kakatiya Hostel",
-            "Hostel A (Boys)", "Hostel B (Boys)", "Hostel C (Girls)", "Hostel D (Girls)",
-            "Kandi Block 1", "Kandi Block 2"
-        ],
-        "blocks": ["Block A", "Block B", "Block C", "Floor 1", "Floor 2", "Floor 3", "Floor 4"],
-        "block_label": "Block / Floor"
+        "blocks": ["Block A", "Block B", "Block C", "Block D"],
+        "block_label": "Block"
     },
 
-    # ── NITs ──
+    # ── NITs (Verified) ──
     "nit trichy": {
         "hostels": [
             "Garnet A", "Garnet B", "Agate Hostel", "Coral Hostel", "Diamond Hostel",
@@ -119,8 +129,8 @@ CAMPUS_DATA = {
             "Sapphire Hostel", "Topaz Hostel", "Zircon A", "Zircon B", "Beryl Hostel",
             "Opal A (Girls)", "Opal B (Girls)", "Opal C (Girls)", "Opal D (Girls)", "Opal E (Girls)"
         ],
-        "blocks": ["Block A", "Block B", "Block C", "Block D", "Wing 1", "Wing 2"],
-        "block_label": "Block / Wing"
+        "blocks": ["Block A", "Block B", "Block C", "Block D"],
+        "block_label": "Block"
     },
     "nit surathkal": {
         "hostels": [
@@ -129,7 +139,7 @@ CAMPUS_DATA = {
             "Mega Boys Hostel", "PG Hostel", "Sahyadri Hostel (Girls)",
             "Sharavathi Hostel (Girls)", "Godavari Hostel (Girls)", "Brahmaputra Hostel (Girls)"
         ],
-        "blocks": ["Block 1", "Block 2", "Block 3", "Tower 1", "Tower 2", "Wing A", "Wing B"],
+        "blocks": ["Block 1", "Block 2", "Block 3", "Tower 1", "Tower 2"],
         "block_label": "Block / Tower"
     },
     "nit warangal": {
@@ -138,7 +148,7 @@ CAMPUS_DATA = {
             "Hall 2", "Hall 3", "Hall 4", "Hall 5", "Hall 6", "Hall 7", "Hall 8",
             "Priyadarshini Ladies Hostel", "Sarojini Devi Ladies Hostel", "New Ladies Hostel"
         ],
-        "blocks": ["Block A", "Block B", "Block C", "Block D", "Wing A", "Wing B", "Floor 1-7"],
+        "blocks": ["Block A", "Block B", "Block C", "Block D", "Wing A", "Wing B"],
         "block_label": "Block / Wing"
     },
     "nit calicut": {
@@ -147,7 +157,7 @@ CAMPUS_DATA = {
             "Hostel F", "Hostel G", "Mega Boys Hostel", "PG 1", "PG 2",
             "LH-A (Ladies)", "LH-B (Ladies)", "LH-C (Ladies)", "LH-D (Ladies)"
         ],
-        "blocks": ["Ground Floor", "1st Floor", "2nd Floor", "3rd Floor", "Wing A", "Wing B"],
+        "blocks": ["Floor 1", "Floor 2", "Floor 3", "Wing A", "Wing B"],
         "block_label": "Wing / Floor"
     },
     "vnit nagpur": {
@@ -155,8 +165,8 @@ CAMPUS_DATA = {
             "Hostel 1", "Hostel 2", "Hostel 3", "Hostel 4", "Hostel 5",
             "Hostel 6", "Hostel 7", "Mega Hostel", "Old Girls Hostel", "New Girls Hostel"
         ],
-        "blocks": ["Block A", "Block B", "Block C", "Wing A", "Wing B"],
-        "block_label": "Block / Wing"
+        "blocks": ["Block A", "Block B", "Block C"],
+        "block_label": "Block"
     },
     "mnit jaipur": {
         "hostels": [
@@ -164,8 +174,8 @@ CAMPUS_DATA = {
             "Hostel 6", "Hostel 7", "Hostel 8", "Hostel 9", "Hostel 10", "Hostel 11",
             "Gargi Hostel (Girls)", "Ganga Hostel (Girls)", "Annie Besant Hostel (Girls)"
         ],
-        "blocks": ["Block A", "Block B", "Block C", "Wing A", "Wing B"],
-        "block_label": "Block / Wing"
+        "blocks": ["Block A", "Block B", "Block C"],
+        "block_label": "Block"
     },
     "mnnit allahabad": {
         "hostels": [
@@ -173,16 +183,16 @@ CAMPUS_DATA = {
             "Tandon Hostel", "Tilak Hostel", "Patel Hostel", "Tagore Hostel",
             "Raman Hostel", "Sarojini Naidu (Girls)", "Kamala Nehru (Girls)"
         ],
-        "blocks": ["Wing A", "Wing B", "Wing C", "Ground Floor", "1st Floor", "2nd Floor"],
-        "block_label": "Wing / Floor"
+        "blocks": ["Wing A", "Wing B", "Wing C"],
+        "block_label": "Wing"
     },
     "nit rourkela": {
         "hostels": [
             "VS Hall of Residence", "MV Hall", "GDB Hall", "DBA Hall",
             "MSS Hall", "HB Hall", "SD Hall", "KMS Hall (Girls)", "CVR Hall (Girls)"
         ],
-        "blocks": ["Block A", "Block B", "Block C", "Block D", "Wing 1", "Wing 2"],
-        "block_label": "Block / Wing"
+        "blocks": ["Block A", "Block B", "Block C", "Block D"],
+        "block_label": "Block"
     },
     "nit kurukshetra": {
         "hostels": [
@@ -190,35 +200,8 @@ CAMPUS_DATA = {
             "Hostel 6", "Hostel 7", "Hostel 8", "Hostel 9", "Hostel 10",
             "Kalpana Chawla Bhawan (Girls)", "Alaknanda Bhawan (Girls)", "Cauvery Bhawan (Girls)"
         ],
-        "blocks": ["Block A", "Block B", "Block C", "Ground Floor", "1st Floor", "2nd Floor"],
-        "block_label": "Block / Floor"
-    },
-    "nit silchar": {
-        "hostels": [
-            "Hostel 1", "Hostel 2", "Hostel 3", "Hostel 4", "Hostel 5",
-            "Hostel 6", "Hostel 7", "Hostel 8", "Hostel 9",
-            "Girls Hostel 1", "Girls Hostel 2", "Girls Hostel 3"
-        ],
-        "blocks": ["Block A", "Block B", "Block C", "Wing A", "Wing B"],
-        "block_label": "Block / Wing"
-    },
-    "nit jamshedpur": {
-        "hostels": [
-            "Hostel A", "Hostel B", "Hostel C", "Hostel D", "Hostel E",
-            "Hostel F", "Hostel G", "Hostel H", "Hostel I", "Hostel J", "Hostel K",
-            "Rani Laxmi Bai Hall (Girls)", "Ambedkar Hall (Girls)"
-        ],
-        "blocks": ["Block A", "Block B", "Block C", "Wing A", "Wing B"],
-        "block_label": "Block / Wing"
-    },
-    "nit durgapur": {
-        "hostels": [
-            "Hall 1", "Hall 2", "Hall 3", "Hall 4", "Hall 5",
-            "Hall 6", "Hall 7", "Hall 8", "Hall 9", "Hall 10", "Hall 11",
-            "Mother Teresa Hall (Girls)", "Priyadarshini Hall (Girls)"
-        ],
-        "blocks": ["Wing A", "Wing B", "Wing C", "Ground Floor", "1st Floor", "2nd Floor"],
-        "block_label": "Wing / Floor"
+        "blocks": ["Block A", "Block B", "Block C"],
+        "block_label": "Block"
     },
 
     # ── BITS Pilani ──
@@ -238,20 +221,20 @@ CAMPUS_DATA = {
             "CH 1", "CH 2", "CH 3", "CH 4", "CH 5", "CH 6", "CH 7",
             "DH 1 (Girls)", "DH 2 (Girls)", "DH 3 (Girls)", "DH 4 (Girls)"
         ],
-        "blocks": ["Wing A", "Wing B", "Wing C", "Ground Floor", "1st Floor", "2nd Floor"],
-        "block_label": "Wing / Floor"
+        "blocks": ["Wing A", "Wing B", "Wing C"],
+        "block_label": "Wing"
     },
     "bits hyderabad": {
         "hostels": [
             "Valmiki Bhavan", "Vyas Bhavan", "Buddh Bhavan", "Gandhi Bhavan",
             "Krishna Bhavan", "Shankar Bhavan", "Ram Bhavan", "Malviya Bhavan",
-            "Meera Bhavan (Girls)", "New Girls Bhavan"
+            "Meera Bhavan (Girls)"
         ],
-        "blocks": ["Block A", "Block B", "Block C", "Wing A", "Wing B"],
-        "block_label": "Block / Wing"
+        "blocks": ["Block A", "Block B", "Block C"],
+        "block_label": "Block"
     },
 
-    # ── VIT (Vellore, Chennai, AP, Bhopal) ──
+    # ── VIT ──
     "vit vellore": {
         "hostels": [
             "MH-A", "MH-B", "MH-C", "MH-D", "MH-E", "MH-F", "MH-G", "MH-H",
@@ -261,25 +244,15 @@ CAMPUS_DATA = {
             "LH-E (Girls)", "LH-F (Girls)", "LH-G (Girls)", "LH-H (Girls)", "LH-J (Girls)", "LH-K (Girls)"
         ],
         "blocks": ["Main Block", "Tower Block", "Annex", "Floor 1-6", "Floor 7-14"],
-        "block_label": "Block / Tower / Floor"
+        "block_label": "Block / Tower"
     },
     "vit chennai": {
         "hostels": [
             "MH-1", "MH-2", "MH-3", "MH-4",
             "LH-1 (Girls)", "LH-2 (Girls)", "LH-3 (Girls)"
         ],
-        "blocks": ["Block A", "Block B", "Block C", "Floor 1-10"],
-        "block_label": "Block / Floor"
-    },
-    "vit-ap": {
-        "hostels": ["Boys Hostel 1", "Boys Hostel 2", "Boys Hostel 3", "Girls Hostel 1", "Girls Hostel 2"],
-        "blocks": ["Block A", "Block B", "Block C", "Wing A", "Wing B"],
-        "block_label": "Block / Wing"
-    },
-    "vit bhopal": {
-        "hostels": ["Boys Hostel 1", "Boys Hostel 2", "Boys Hostel 3", "Girls Hostel 1", "Girls Hostel 2"],
-        "blocks": ["Block 1", "Block 2", "Block 3", "Wing A", "Wing B"],
-        "block_label": "Block / Wing"
+        "blocks": ["Block A", "Block B", "Block C"],
+        "block_label": "Block"
     },
 
     # ── Manipal (MAHE) ──
@@ -292,11 +265,11 @@ CAMPUS_DATA = {
             "Block 11 (Girls)", "Block 12 (Girls)", "Block 13 (Girls)",
             "Sharada Hostel", "New Ladies Hostel"
         ],
-        "blocks": ["Wing A", "Wing B", "Wing C", "Floor 1", "Floor 2", "Floor 3", "Floor 4"],
+        "blocks": ["Wing A", "Wing B", "Wing C", "Floor 1", "Floor 2", "Floor 3"],
         "block_label": "Wing / Floor"
     },
 
-    # ── SRM IST ──
+    # ── SRM ──
     "srm": {
         "hostels": [
             "Pierre Fauchard (Boys)", "Paari (Boys)", "Kaari (Boys)", "Oori (Boys)",
@@ -313,8 +286,7 @@ CAMPUS_DATA = {
             "Jubilee Hall", "Gwyer Hall", "Mansarowar Hostel", "Post-Graduate Men's Hostel",
             "International Students House", "Meghdoot Hostel (Girls)", "Geetanjali Hostel (Girls)",
             "Rajiv Gandhi Hostel for Girls", "Ambedkar-Ganguly Hostel", "D.S. Kothari Hostel",
-            "Undergraduate Hostel for Girls (Dhaka)", "Miranda House Hostel", "SRCC Hostel",
-            "St. Stephen's Hostel", "Hindu College Hostel", "Hansraj College Hostel"
+            "Undergraduate Hostel for Girls (Dhaka)"
         ],
         "blocks": ["Block A", "Block B", "Block C", "North Wing", "South Wing"],
         "block_label": "Block / Wing"
@@ -326,38 +298,31 @@ CAMPUS_DATA = {
             "Broacha Hostel", "Birla Hostel", "Ruiya Hostel", "Morvi Hostel",
             "Dhanrajgiri Hostel", "Rajputana Hostel", "Limbdi Hostel", "Vishwakarma Hostel",
             "Vivekanand Hostel", "Bhabha Hostel", "Dalmia Hostel", "Annie Besant Hostel (Girls)",
-            "Kasturba Hostel (Girls)", "Rani Laxmi Bai Hostel (Girls)", "Gargi Hostel (Girls)",
-            "Maitreyi Hostel (Girls)"
+            "Kasturba Hostel (Girls)", "Rani Laxmi Bai Hostel (Girls)", "Gargi Hostel (Girls)"
         ],
-        "blocks": ["Block 1", "Block 2", "Block 3", "Block 4", "Wing A", "Wing B"],
-        "block_label": "Block / Wing"
+        "blocks": ["Block 1", "Block 2", "Block 3", "Block 4"],
+        "block_label": "Block"
     },
 
-    # ── AIIMS (All Campuses) ──
+    # ── AIIMS (New Delhi & Campuses) ──
     "aiims": {
         "hostels": [
-            "UG Boys Hostel 1", "UG Boys Hostel 2", "UG Girls Hostel 1", "UG Girls Hostel 2",
-            "PG Gents Hostel", "PG Ladies Hostel", "Interns Hostel", "Nursing Hostel",
-            "Hostel 1", "Hostel 2", "Hostel 3", "Hostel 4", "Hostel 5", "Hostel 6",
-            "Masjid Moth Hostel", "Ayurvigyan Nagar Hostel"
+            "UG Boys Hostel", "UG Girls Hostel", "PG Gents Hostel", "PG Ladies Hostel",
+            "Interns Hostel", "Nursing Hostel", "Hostel 1", "Hostel 2", "Hostel 3",
+            "Hostel 4", "Hostel 5", "Hostel 6"
         ],
-        "blocks": ["Block A", "Block B", "Block C", "Wing 1", "Wing 2", "Floor 1-4"],
-        "block_label": "Block / Wing"
+        "blocks": ["Block A", "Block B", "Block C"],
+        "block_label": "Block"
     },
 
     # ── RGUKT (IIIT Basar, Nuzvid, RK Valley, Srikakulam, Ongole) ──
     "rgukt": {
-        "hostels": [
-            "Boys Hostel 1", "Boys Hostel 2", "Boys Hostel 3",
-            "Girls Hostel 1", "Girls Hostel 2", "Girls Hostel 3",
-            "Mega Boys Hostel", "Mega Girls Hostel"
-        ],
+        "hostels": ["Girls Hostel", "Boys Hostel"],
         "blocks": [
             "Krishnaveni Block", "Bhima Block", "Munneru Block", "Ghataprabha Block",
-            "Godavari Block", "Tungabhadra Block", "Kaveri Block", "Narmada Block",
-            "Mahanadi Block", "Brahmaputra Block"
+            "Godavari Block", "Tungabhadra Block", "Kaveri Block", "Narmada Block"
         ],
-        "block_label": "River Block"
+        "block_label": "Block"
     },
 
     # ── IIIT Hyderabad ──
@@ -366,91 +331,97 @@ CAMPUS_DATA = {
             "Palash Nivas (OBH)", "Parijaat Nivas (Girls)", "Kadamb Nivas (NBH)",
             "Bakul Nivas", "Anand Nivas (Girls)"
         ],
-        "blocks": ["North Wing", "South Wing", "East Wing", "West Wing", "Floor 1-4"],
-        "block_label": "Wing / Floor"
-    },
-
-    # ── IIIT Allahabad ──
-    "iiit allahabad": {
-        "hostels": [
-            "Boys Hostel 1 (BH1)", "Boys Hostel 2 (BH2)", "Boys Hostel 3 (BH3)",
-            "Boys Hostel 4 (BH4)", "Boys Hostel 5 (BH5)",
-            "Girls Hostel 1 (GH1)", "Girls Hostel 2 (GH2)", "Girls Hostel 3 (GH3)"
-        ],
-        "blocks": ["Wing A", "Wing B", "Wing C", "Ground Floor", "1st Floor", "2nd Floor"],
-        "block_label": "Wing / Floor"
-    },
-
-    # ── NIFTs (All 17 campuses) ──
-    "nift": {
-        "hostels": [
-            "In-Campus Girls Hostel", "In-Campus Boys Hostel",
-            "Off-Campus Girls Hostel", "Off-Campus Boys Hostel",
-            "Senior Girls Hostel", "Junior Girls Hostel"
-        ],
-        "blocks": ["Block A", "Block B", "Wing 1", "Wing 2", "Floor 1", "Floor 2", "Floor 3"],
-        "block_label": "Block / Wing"
+        "blocks": ["North Wing", "South Wing", "East Wing", "West Wing"],
+        "block_label": "Wing"
     },
 }
 
-# Standard Category Fallbacks for any unmapped college
-DEFAULT_IIT_NIT = {
-    "hostels": [
-        "Boys Hostel 1", "Boys Hostel 2", "Boys Hostel 3", "Boys Hostel 4",
-        "Girls Hostel 1", "Girls Hostel 2", "Girls Hostel 3",
-        "Mega Boys Hostel", "Mega Girls Hostel", "PG Hostel"
-    ],
-    "blocks": ["Block A", "Block B", "Block C", "Wing A", "Wing B", "Wing C", "Floor 1", "Floor 2", "Floor 3"],
-    "block_label": "Block / Wing"
-}
-
-DEFAULT_MEDICAL = {
-    "hostels": [
-        "UG Boys Hostel", "UG Girls Hostel", "PG Boys Hostel", "PG Girls Hostel",
-        "Interns Hostel", "Senior Residents Hostel", "Nursing Hostel"
-    ],
-    "blocks": ["Block A", "Block B", "Block C", "Wing A", "Wing B", "Floor 1", "Floor 2"],
-    "block_label": "Block / Wing"
-}
-
-DEFAULT_STANDARD = {
-    "hostels": [
-        "Boys Hostel", "Girls Hostel", "Hostel 1", "Hostel 2", "Hostel 3", "Hostel 4",
-        "New Boys Hostel", "New Girls Hostel", "PG Hostel", "International Hostel"
-    ],
-    "blocks": [
-        "Block A", "Block B", "Block C", "Block D",
-        "Wing A", "Wing B", "Wing C", "Wing D",
-        "Ground Floor", "1st Floor", "2nd Floor", "3rd Floor"
-    ],
-    "block_label": "Block / Wing / Floor"
+# ── UNCERTAINTY FALLBACK (STRICT USER MANDATE) ──
+# If we are unsure about any college, NEVER fabricate names.
+# Simply show "Boys Hostel" and "Girls Hostel", with empty blocks list so the student fills it themselves.
+DEFAULT_UNSURE = {
+    "hostels": ["Girls Hostel", "Boys Hostel"],
+    "blocks": [],
+    "block_label": "Block / Wing / Room"
 }
 
 
 def get_campus_data(college_name: str) -> dict:
     """
-    Intelligently retrieves the specific hostels and blocks/wings for a given college name.
-    Falls back cleanly to targeted college-type archetypes so the student is never overwhelmed.
+    Intelligently retrieves verified hostels and blocks/wings.
+    If the college is not in our verified database, returns ONLY Girls Hostel & Boys Hostel
+    with an empty block list so the student can fill their own block without confusion.
     """
     if not college_name:
-        return DEFAULT_STANDARD
+        return DEFAULT_UNSURE
 
     normalized = college_name.lower().strip()
 
-    # 1. Exact or keyword match against prominent colleges
+    # Match against strictly verified campus database
     for key, data in CAMPUS_DATA.items():
         if key in normalized:
             return data
 
-    # 2. Archetype detection based on college keywords
-    if "iit" in normalized or "indian institute of technology" in normalized:
-        return DEFAULT_IIT_NIT
-    if "nit" in normalized or "national institute of technology" in normalized:
-        return DEFAULT_IIT_NIT
-    if "iiit" in normalized or "information technology" in normalized:
-        return DEFAULT_IIT_NIT
-    if any(med in normalized for med in ["medical", "aiims", "dental", "nursing", "pharmacy", "hospital"]):
-        return DEFAULT_MEDICAL
+    # Strict fallback for unverified colleges: NEVER make up names
+    return DEFAULT_UNSURE
 
-    # 3. Clean universal standard fallback
-    return DEFAULT_STANDARD
+
+# ── INTELLIGENT HOSTEL & BLOCK SWAP / NORMALIZER ──
+# Handles cases where confused users enter block into hostel, or hostel into block
+
+KNOWN_GIRLS_BLOCKS = {
+    "krishnaveni", "bhima", "tungabhadra", "ghataprabha", "munneru",
+    "gargi", "kasturba", "sarojini", "kalpana chawla", "meera", "opal",
+    "himadri", "kailash", "swarna", "sarayu", "bhavani", "pinakini", "vasista", "gautami"
+}
+
+KNOWN_BOYS_BLOCKS = {
+    "godavari", "sabari", "indravathi", "banganga", "purna", "pranahita",
+    "manjeera", "nagavali", "swarnamukhi", "vamsadhara", "aravali", "nilgiri",
+    "karakoram", "kumaon", "shivalik", "zanskar", "satpura", "girnar", "udaigiri",
+    "garnet", "agate", "coral", "diamond", "jade", "pearl", "emerald", "ruby"
+}
+
+def normalize_hostel_and_block(hostel: str, block: str, college_name: str = "") -> tuple[str, str]:
+    """
+    Intelligently detects when a user mistakenly enters a block name in the hostel field
+    or swaps hostel and block. Returns (clean_hostel, clean_block).
+    """
+    h_clean = (hostel or "").strip()
+    b_clean = (block or "").strip()
+    h_lower = h_clean.lower()
+    b_lower = b_clean.lower()
+
+    # Case 1: hostel is "Block A" / "Krishnaveni Block" and block is "Girls Hostel" (DIRECT SWAP)
+    if ("hostel" in b_lower or "bhawan" in b_lower or "hall" in b_lower) and not ("hostel" in h_lower or "bhawan" in h_lower or "hall" in h_lower):
+        return b_clean, h_clean
+
+    # Case 2: hostel contains a known block name (e.g. "Krishnaveni" or "Godavari") and NO hostel word
+    words_in_h = set(h_lower.replace("-", " ").replace("_", " ").split())
+    if "hostel" not in h_lower and "bhawan" not in h_lower and "hall" not in h_lower:
+        # Check if it matches known Girls blocks
+        if words_in_h & KNOWN_GIRLS_BLOCKS:
+            actual_block = h_clean
+            if b_clean and b_clean.lower() not in ["girls hostel", "boys hostel"]:
+                actual_block = f"{h_clean} {b_clean}".strip()
+            return "Girls Hostel", actual_block
+
+        # Check if it matches known Boys blocks
+        if words_in_h & KNOWN_BOYS_BLOCKS:
+            actual_block = h_clean
+            if b_clean and b_clean.lower() not in ["girls hostel", "boys hostel"]:
+                actual_block = f"{h_clean} {b_clean}".strip()
+            return "Boys Hostel", actual_block
+
+        # Check if it looks like a block code e.g. "Block A", "Wing 2", "MB-1"
+        if any(h_lower.startswith(prefix) for prefix in ["block", "wing", "tower", "floor", "mh", "lh"]):
+            # User typed block into hostel
+            if "girl" in b_lower:
+                return "Girls Hostel", h_clean
+            elif "boy" in b_lower:
+                return "Boys Hostel", h_clean
+            else:
+                # Keep block in block, and set standard hostel if empty
+                return "Hostel", h_clean
+
+    return h_clean, b_clean

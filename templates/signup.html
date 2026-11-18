@@ -8,7 +8,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2.5rem 1.25rem;
+    padding: 2rem 1.25rem;
     position: relative;
     z-index: 5;
   }
@@ -19,12 +19,12 @@
   }
 
   .auth-hero {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     text-align: center;
   }
 
   .auth-hero h1 {
-    font-size: clamp(1.8rem, 5vw, 2.3rem);
+    font-size: clamp(1.6rem, 4vw, 2.1rem);
     font-weight: 800;
     line-height: 1.25;
     letter-spacing: -0.02em;
@@ -39,22 +39,22 @@
   }
 
   .auth-hero p {
-    margin-top: .75rem;
-    font-size: .92rem;
+    margin-top: .5rem;
+    font-size: .88rem;
     color: var(--text-muted);
-    max-width: 380px;
+    max-width: 420px;
     margin-left: auto;
     margin-right: auto;
-    line-height: 1.5;
+    line-height: 1.45;
   }
 
   .auth-card {
-    background: rgba(19, 17, 26, 0.85);
+    background: rgba(19, 17, 26, 0.88);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius);
-    padding: 2.2rem;
+    padding: 2rem;
     box-shadow: 0 16px 50px rgba(0, 0, 0, 0.7), 0 0 40px rgba(245, 166, 35, 0.08);
     position: relative;
     overflow: hidden;
@@ -71,22 +71,33 @@
   }
 
   .auth-card h2 {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
     color: var(--text);
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
+  .signup-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .signup-col {
+    display: flex;
+    flex-direction: column;
+  }
+
   /* Single-line perfect horizontal alignment for Block and Room No */
   .block-room-row {
     display: flex !important;
     flex-direction: row !important;
-    gap: 14px !important;
+    gap: 12px !important;
     align-items: flex-start !important;
-    margin-top: 1.1rem !important;
+    margin-top: 1rem !important;
     width: 100% !important;
   }
 
@@ -97,31 +108,95 @@
   }
 
   .field-spacing {
-    margin-top: 1.1rem;
+    margin-top: 1rem;
   }
 
   .auth-card .btn-primary {
-    margin-top: 1.6rem;
-    padding: 0.85rem;
-    font-size: 1rem;
+    margin-top: 1.4rem;
+    padding: 0.82rem;
+    font-size: 0.98rem;
   }
 
   .auth-switch {
     text-align: center;
-    margin-top: 1.25rem;
-    font-size: .88rem;
+    margin-top: 1.1rem;
+    font-size: .86rem;
     color: var(--text-muted);
   }
 
   .auth-tagline {
     text-align: center;
-    margin-top: 1.75rem;
-    font-size: .84rem;
+    margin-top: 1.5rem;
+    font-size: .82rem;
     color: var(--text-faint);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
+  }
+
+  /* ══════════════════════════════════════════════
+     DESKTOP WIDE SCREEN SINGLE PAGE VIEW (NO SCROLL)
+     ══════════════════════════════════════════════ */
+  @media (min-width: 860px) {
+    .auth-wrap {
+      min-height: calc(100vh - 65px);
+      padding: 0.8rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .auth-box {
+      max-width: 920px;
+      width: 100%;
+    }
+    .auth-hero {
+      margin-bottom: 0.75rem;
+    }
+    .auth-hero img {
+      width: 48px !important;
+      height: 48px !important;
+      margin-bottom: 0.3rem !important;
+      border-radius: 14px !important;
+    }
+    .auth-hero h1 {
+      font-size: 1.3rem !important;
+      line-height: 1.2 !important;
+    }
+    .auth-hero p {
+      display: none !important; /* Hide long paragraph on desktop so form fits comfortably in single screen */
+    }
+    .auth-card {
+      padding: 1.4rem 1.8rem;
+    }
+    .auth-card h2 {
+      margin-bottom: 0.75rem;
+      font-size: 1.1rem;
+    }
+    .signup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 1.8rem;
+      row-gap: 0;
+      align-items: start;
+    }
+    .field-spacing {
+      margin-top: 0.65rem !important;
+    }
+    .block-room-row {
+      margin-top: 0.65rem !important;
+    }
+    .auth-card .btn-primary {
+      margin-top: 1rem !important;
+      padding: 0.75rem !important;
+      font-size: 0.95rem;
+    }
+    .auth-switch {
+      margin-top: 0.65rem;
+    }
+    .auth-tagline {
+      display: none !important;
+    }
   }
 </style>
 {% endblock %}
@@ -131,9 +206,9 @@
   <div class="auth-box">
 
     <div class="auth-hero">
-      <div style="display: flex; justify-content: center; margin-bottom: 1.25rem;">
+      <div style="display: flex; justify-content: center; margin-bottom: 0.8rem;">
         <img src="{{ url_for('static', filename='logo.png') }}" alt="HostelHub"
-             style="width: 88px; height: 88px; border-radius: 24px; object-fit: cover; border: 2px solid rgba(245, 166, 35, 0.45); box-shadow: 0 0 35px rgba(245, 166, 35, 0.4), 0 12px 30px rgba(0, 0, 0, 0.6); transition: transform 0.3s ease;">
+             style="width: 72px; height: 72px; border-radius: 18px; object-fit: cover; border: 2px solid rgba(245, 166, 35, 0.45); box-shadow: 0 0 30px rgba(245, 166, 35, 0.35), 0 8px 24px rgba(0, 0, 0, 0.6); transition: transform 0.3s ease;">
       </div>
       <h1>Share what you have.<br><span class="accent">Find what you need.</span></h1>
       <p>Create your profile once. Your hostel only sees its own shelf. The other hostel only learns that an item exists, never who has it.</p>
@@ -153,117 +228,124 @@
       {% endif %}
 
       <form method="post" novalidate>
-        <!-- Name -->
-        <div class="field">
-          <label class="field-label" for="name">Your name</label>
-          <input id="name" type="text" name="name" value="{{ form.get('name', '') }}"
-                 placeholder="e.g. Priya Sharma" required autocomplete="name">
-        </div>
+        <div class="signup-grid">
+          
+          <!-- LEFT COLUMN: Campus & Residence Details -->
+          <div class="signup-col">
+            <!-- Name -->
+            <div class="field">
+              <label class="field-label" for="name">Your name</label>
+              <input id="name" type="text" name="name" value="{{ form.get('name', '') }}"
+                     placeholder="e.g. Priya Sharma" required autocomplete="name">
+            </div>
 
-        <!-- College / University Selection -->
-        <div class="field field-spacing">
-          <label class="field-label" for="college_name">
-            <span>College / University</span>
-            <span class="field-opt">Select or Type</span>
-          </label>
-          <input id="college_name" type="text" name="college_name" list="collegeList"
-                 value="{{ form.get('college_name', '') }}"
-                 placeholder="e.g. IIT Bombay, BITS Pilani, VIT, or type yours…"
-                 required autocomplete="organization">
-          <datalist id="collegeList">
-            {% for col in popular_colleges %}
-              <option value="{{ col }}">
-            {% endfor %}
-          </datalist>
-          <div style="font-size: 0.74rem; color: var(--text-faint); margin-top: 4px;">
-            🔒 Data is isolated to your campus. Students outside cannot view your shelf or rooms.
+            <!-- College / University Selection -->
+            <div class="field field-spacing">
+              <label class="field-label" for="college_name">
+                <span>College / University</span>
+                <span class="field-opt">Select or Type</span>
+              </label>
+              <input id="college_name" type="text" name="college_name" list="collegeList"
+                     value="{{ form.get('college_name', '') }}"
+                     placeholder="e.g. NIT Andhra Pradesh, IIT Delhi…"
+                     required autocomplete="organization">
+              <datalist id="collegeList">
+                {% for col in popular_colleges %}
+                  <option value="{{ col }}">
+                {% endfor %}
+              </datalist>
+            </div>
+
+            <!-- Hostel Selection -->
+            <div class="field field-spacing">
+              <label class="field-label" for="hostel_name">
+                <span>Hostel Name</span>
+                <span class="field-opt" id="hostelCountHint">Campus Specific</span>
+              </label>
+              <input id="hostel_name" type="text" name="hostel_name" list="hostelList"
+                     value="{{ form.get('hostel_name', '') }}"
+                     placeholder="Select or type your hostel…"
+                     required autocomplete="off">
+              <datalist id="hostelList">
+                {% for h in hostels %}
+                  <option value="{{ h }}">
+                {% endfor %}
+              </datalist>
+            </div>
+
+            <!-- Block & Room No (STRICT HORIZONTAL SINGLE LINE) -->
+            <div class="block-room-row">
+              <div class="field">
+                <label class="field-label" for="block">
+                  <span id="blockLabel">{{ block_label or 'Block' }}</span> <span class="field-opt">(optional)</span>
+                </label>
+                <input id="block" type="text" name="block" list="blocks"
+                       value="{{ form.get('block', '') }}" placeholder="e.g. Krishnaveni, Block A…">
+                <datalist id="blocks">
+                  {% for b in blocks %}<option value="{{ b }}">{% endfor %}
+                </datalist>
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="room_no">Room no.</label>
+                <input id="room_no" type="text" name="room_no"
+                       value="{{ form.get('room_no', '') }}" placeholder="e.g. 204" required>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- Hostel Selection -->
-        <div class="field field-spacing">
-          <label class="field-label" for="hostel_name">
-            <span>Hostel Name</span>
-            <span class="field-opt" id="hostelCountHint">Campus Specific</span>
-          </label>
-          <input id="hostel_name" type="text" name="hostel_name" list="hostelList"
-                 value="{{ form.get('hostel_name', '') }}"
-                 placeholder="Select or type your hostel…"
-                 required autocomplete="off">
-          <datalist id="hostelList">
-            {% for h in hostels %}
-              <option value="{{ h }}">
-            {% endfor %}
-          </datalist>
-        </div>
+          <!-- RIGHT COLUMN: Account Credentials & Referral -->
+          <div class="signup-col">
+            <!-- Email -->
+            <div class="field">
+              <label class="field-label" for="email">College Email</label>
+              <input id="email" type="email" name="email"
+                     value="{{ form.get('email', '') }}" placeholder="you@college.edu"
+                     required autocomplete="email">
+            </div>
 
-        <!-- Block & Room No (STRICT HORIZONTAL SINGLE LINE) -->
-        <div class="block-room-row">
-          <div class="field">
-            <label class="field-label" for="block">
-              <span id="blockLabel">{{ block_label or 'Block / Wing' }}</span> <span class="field-opt">(optional)</span>
-            </label>
-            <input id="block" type="text" name="block" list="blocks"
-                   value="{{ form.get('block', '') }}" placeholder="e.g. Block A, Wing 1…">
-            <datalist id="blocks">
-              {% for b in blocks %}<option value="{{ b }}">{% endfor %}
-            </datalist>
+            <!-- Password with Show/Hide -->
+            <div class="field field-spacing">
+              <label class="field-label" for="password">Password</label>
+              <div class="password-field-wrap">
+                <input id="password" type="password" name="password"
+                       placeholder="At least 6 characters" minlength="6"
+                       required autocomplete="new-password">
+                <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('password', this)" title="Show password" aria-label="Toggle password visibility">
+                  👁️
+                </button>
+              </div>
+            </div>
+
+            <!-- Confirm Password with Show/Hide -->
+            <div class="field field-spacing">
+              <label class="field-label" for="confirm_password">Confirm Password</label>
+              <div class="password-field-wrap">
+                <input id="confirm_password" type="password" name="confirm_password"
+                       placeholder="Re-enter your password" minlength="6"
+                       required autocomplete="new-password">
+                <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('confirm_password', this)" title="Show password" aria-label="Toggle password visibility">
+                  👁️
+                </button>
+              </div>
+            </div>
+
+            <!-- Referral Code (optional) -->
+            <div class="field field-spacing">
+              <label class="field-label" for="ref_code" style="font-size:0.82rem; color:var(--text-muted);">
+                🎁 Have an invite code? <span style="font-weight:400;">(Optional)</span>
+              </label>
+              <input id="ref_code" type="text" name="ref_code" maxlength="10"
+                     value="{{ ref_code or form.get('ref_code', '') }}"
+                     placeholder="e.g. A3F2B109"
+                     style="text-transform:uppercase; letter-spacing:0.1em; font-weight:700; font-family:monospace;">
+            </div>
           </div>
 
-          <div class="field">
-            <label class="field-label" for="room_no">Room no.</label>
-            <input id="room_no" type="text" name="room_no"
-                   value="{{ form.get('room_no', '') }}" placeholder="e.g. 204" required>
-          </div>
-        </div>
-
-        <!-- Email -->
-        <div class="field field-spacing">
-          <label class="field-label" for="email">College Email</label>
-          <input id="email" type="email" name="email"
-                 value="{{ form.get('email', '') }}" placeholder="you@college.edu"
-                 required autocomplete="email">
-        </div>
-
-        <!-- Password with Show/Hide -->
-        <div class="field field-spacing">
-          <label class="field-label" for="password">Password</label>
-          <div class="password-field-wrap">
-            <input id="password" type="password" name="password"
-                   placeholder="At least 6 characters" minlength="6"
-                   required autocomplete="new-password">
-            <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('password', this)" title="Show password" aria-label="Toggle password visibility">
-              👁️
-            </button>
-          </div>
-        </div>
-
-        <!-- Confirm Password with Show/Hide -->
-        <div class="field field-spacing">
-          <label class="field-label" for="confirm_password">Confirm Password</label>
-          <div class="password-field-wrap">
-            <input id="confirm_password" type="password" name="confirm_password"
-                   placeholder="Re-enter your password" minlength="6"
-                   required autocomplete="new-password">
-            <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('confirm_password', this)" title="Show password" aria-label="Toggle password visibility">
-              👁️
-            </button>
-          </div>
-        </div>
-
-        <!-- Referral Code (optional) -->
-        <div class="field" style="margin-top:0.75rem;">
-          <label class="field-label" for="ref_code" style="font-size:0.82rem; color:var(--text-muted);">
-            🎁 Have a friend's invite code? <span style="font-weight:400;">(Optional)</span>
-          </label>
-          <input id="ref_code" type="text" name="ref_code" maxlength="10"
-                 value="{{ ref_code or form.get('ref_code', '') }}"
-                 placeholder="e.g. A3F2B109"
-                 style="text-transform:uppercase; letter-spacing:0.1em; font-weight:700; font-family:monospace;">
         </div>
 
         <!-- Submit Button -->
-        <button class="btn btn-primary btn-full" type="submit" style="margin-top: 1.6rem;">Create profile →</button>
+        <button class="btn btn-primary btn-full" type="submit">Create profile →</button>
       </form>
 
       <p class="auth-switch">
@@ -282,6 +364,7 @@
   const collegeInput = document.getElementById('college_name');
   const hostelList = document.getElementById('hostelList');
   const blockList = document.getElementById('blocks');
+  const blockInput = document.getElementById('block');
   const blockLabel = document.getElementById('blockLabel');
   const hostelCountHint = document.getElementById('hostelCountHint');
 
@@ -314,8 +397,14 @@
       hostelList.innerHTML = data.hostels.map(h => `<option value="${h}">`).join('');
       if (hostelCountHint) hostelCountHint.textContent = `${data.hostels.length} hostels for campus`;
     }
-    if (data.blocks && blockList) {
-      blockList.innerHTML = data.blocks.map(b => `<option value="${b}">`).join('');
+    if (blockList) {
+      if (data.blocks && data.blocks.length > 0) {
+        blockList.innerHTML = data.blocks.map(b => `<option value="${b}">`).join('');
+        if (blockInput) blockInput.placeholder = "Select or type block…";
+      } else {
+        blockList.innerHTML = "";
+        if (blockInput) blockInput.placeholder = "e.g. Block A, Floor 2…";
+      }
     }
     if (data.block_label && blockLabel) {
       blockLabel.textContent = data.block_label;
