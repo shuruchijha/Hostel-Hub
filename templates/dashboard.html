@@ -298,9 +298,52 @@
   }
 
   /* ── SIDEBAR CARDS & FORMS ── */
+  .dash-sidebar {
+    position: sticky;
+    top: 64px;
+    align-self: start;
+  }
   .dash-sidebar .card + .card { margin-top: 1.25rem; }
   .add-form .field + .field { margin-top: .75rem; }
   .add-form .btn-primary { margin-top: 1rem; }
+
+  /* ── SIDEBAR TOP DUAL ACTION SWITCHER ── */
+  .sidebar-tab-switch {
+    display: flex;
+    gap: 5px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 3px;
+    margin-bottom: 1.15rem;
+  }
+  .tab-switch-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 0.6rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+  }
+  .tab-switch-btn.active {
+    background: var(--amber);
+    color: #0b0910 !important;
+    box-shadow: 0 2px 10px rgba(245, 166, 35, 0.35);
+  }
+  .tab-switch-btn.active-purple {
+    background: linear-gradient(135deg, #a78bfa, #7c5cff);
+    color: #fff !important;
+    box-shadow: 0 2px 10px rgba(124, 92, 255, 0.35);
+  }
+  .tab-switch-btn:not(.active):hover {
+    color: var(--text);
+  }
 
   .my-items-list { display: flex; flex-direction: column; gap: .6rem; }
   .my-item-row {
@@ -958,143 +1001,156 @@
   <!-- RIGHT: Sidebar (Post Request / Add Item / Shelf Management) -->
   <aside class="dash-sidebar">
 
-    <!-- Card 1: Post a Request (I need something) -->
-    <div class="card" style="border-top: 3px solid var(--purple-accent, #7c5cff);">
-      <h3 style="font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; display: flex; align-items: center; gap: 6px;">
-        <span>📢</span> Need something tonight?
-      </h3>
-      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
-        Ask fellow students in {{ me.hostel_name }}. Friends who have it can reach out to you!
-      </p>
-
-      <form class="add-form" method="post" action="{{ url_for('add_request') }}">
-        <div class="field">
-          <label class="field-label" for="req-name">What do you need?</label>
-          <input id="req-name" type="text" name="name"
-                 placeholder="e.g. Type-C charger, Paracetamol, scissors…"
-                 maxlength="100" required autocomplete="off">
-        </div>
-
-        <div class="field">
-          <label class="field-label" for="req-cat">Category</label>
-          <select id="req-cat" name="category">
-            {% for cat, emoji in categories.items() %}
-              <option value="{{ cat }}">{{ emoji }} {{ cat }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="field">
-          <label class="field-label" for="req-urgency">Urgency</label>
-          <select id="req-urgency" name="urgency">
-            <option value="tonight">🌙 Tonight</option>
-            <option value="urgent">🚨 Urgent (Need ASAP)</option>
-            <option value="anytime">📦 Anytime this week</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label class="field-label" for="req-price">
-            <span>Willing to Pay (₹ INR)</span>
-            <span class="field-opt">0 for free/borrow</span>
-          </label>
-          <input id="req-price" type="number" name="price_offer" min="0" step="1"
-                 placeholder="e.g. 25" value="0">
-        </div>
-
-        <div class="field">
-          <label class="field-label" for="req-note">
-            <span>Note / Details</span>
-            <span class="field-opt">Optional</span>
-          </label>
-          <input id="req-note" type="text" name="note"
-                 placeholder="e.g. Need for 30 mins to charge phone" maxlength="200">
-        </div>
-
-        <!-- Room Delivery Tip Option -->
-        <div class="field" style="margin-top: 0.75rem;">
-          <label class="field-label" for="req-delivery">
-            <span>🛵 Room Delivery Option</span>
-            <span class="field-opt">Micro-fee</span>
-          </label>
-          <select id="req-delivery" name="delivery_tip">
-            <option value="0">🚶 I'll self-pickup (₹0)</option>
-            <option value="2" selected>🚪 Doorstep Room Delivery (+₹2)</option>
-            <option value="5">🚀 Fast Delivery (+₹5)</option>
-          </select>
-        </div>
-
-        <!-- Anonymous / Safe Request Option -->
-        <div style="margin-top: 0.75rem; background: rgba(124, 92, 255, 0.08); border: 1px solid rgba(124, 92, 255, 0.25); border-radius: 8px; padding: 0.6rem 0.75rem;">
-          <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #c4b5fd; cursor: pointer; user-select: none;">
-            <input type="checkbox" name="is_anonymous" value="1" style="width: 16px; height: 16px; min-height: 16px; accent-color: #7c5cff;">
-            <span>🔒 <strong>Post Anonymously</strong> (Hides your name; for pads, meds & sensitive needs)</span>
-          </label>
-        </div>
-
-        <button class="btn btn-primary btn-full" type="submit" style="background: linear-gradient(135deg, #a78bfa, #7c5cff); color: #fff; margin-top: 1rem;">
-          Post Request 📢
+    <!-- Unified Top Action Card: Put on Shelf & Need Item (Right at the Top, Zero Scrolling!) -->
+    <div class="card" style="border-top: 3px solid var(--amber);">
+      <!-- Dual Action Switcher Tabs -->
+      <div class="sidebar-tab-switch" role="tablist">
+        <button type="button" class="tab-switch-btn {{ 'active' if tab != 'requests' else '' }}" id="btnShareTab" onclick="switchSidebarAction('share')">
+          ✨ Offer Item
         </button>
-      </form>
-    </div>
-
-    <!-- Card 2: Add Item to Shelf (I have something) -->
-    <div class="card">
-      <h3 style="font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; display: flex; align-items: center; gap: 6px;">
-        <span>✨</span> Have something to share?
-      </h3>
-      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
-        Put an item on the shelf for money, barter, or for free.
-      </p>
-
-      <form class="add-form" method="post" action="{{ url_for('add_item') }}">
-        <div class="field">
-          <label class="field-label" for="item-name">Item Name</label>
-          <input id="item-name" type="text" name="name"
-                 placeholder="e.g. Maggi 2-pack, Dettol, Notebook…"
-                 maxlength="80" required autocomplete="off">
-        </div>
-
-        <div class="field">
-          <label class="field-label" for="item-cat">Category</label>
-          <select id="item-cat" name="category">
-            {% for cat, emoji in categories.items() %}
-              <option value="{{ cat }}">{{ emoji }} {{ cat }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="field">
-          <label class="field-label" for="item-cond">Condition</label>
-          <select id="item-cond" name="condition" onchange="handleConditionChange(this.value)">
-            <option value="used">♻️ Used (Set Price or Negotiable)</option>
-            <option value="new_packed">🏷️ New / Packed (Must set price)</option>
-            <option value="free">🎁 Free / Giving Away</option>
-          </select>
-        </div>
-
-        <div class="field" id="priceFieldContainer">
-          <label class="field-label" for="item-price">
-            <span>Price (₹ INR)</span>
-            <span class="field-opt">0 for free/negotiable</span>
-          </label>
-          <input id="item-price" type="number" name="price" min="0" step="1"
-                 placeholder="e.g. 25" value="0">
-        </div>
-
-        <div class="field" id="paymentModeContainer">
-          <label class="field-label" for="item-paymode">Accepted Payment</label>
-          <select id="item-paymode" name="payment_mode">
-            <option value="both">🤝 Both UPI & Cash</option>
-            <option value="upi">📱 UPI (GPay/PhonePe/Paytm)</option>
-            <option value="cash">💵 Cash on Handover</option>
-          </select>
-        </div>
-
-        <button class="btn btn-primary btn-full" type="submit">
-          Put on Shelf ✓
+        <button type="button" class="tab-switch-btn {{ 'active-purple' if tab == 'requests' else '' }}" id="btnRequestTab" onclick="switchSidebarAction('request')">
+          📢 Need Item
         </button>
-      </form>
+      </div>
+
+      <!-- PANEL 1: Add Item to Shelf (I have something to share) -->
+      <div id="panelShare" style="{{ '' if tab != 'requests' else 'display:none;' }}">
+        <h3 style="font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 6px;">
+          <span>✨</span> Have something to share?
+        </h3>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Put an item on the shelf for money, barter, or for free.
+        </p>
+
+        <form class="add-form" method="post" action="{{ url_for('add_item') }}">
+          <div class="field">
+            <label class="field-label" for="item-name">Item Name</label>
+            <input id="item-name" type="text" name="name"
+                   placeholder="e.g. Maggi 2-pack, Dettol, Notebook…"
+                   maxlength="80" required autocomplete="off">
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="item-cat">Category</label>
+            <select id="item-cat" name="category">
+              {% for cat, emoji in categories.items() %}
+                <option value="{{ cat }}">{{ emoji }} {{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="item-cond">Condition</label>
+            <select id="item-cond" name="condition" onchange="handleConditionChange(this.value)">
+              <option value="used">♻️ Used (Set Price or Negotiable)</option>
+              <option value="new_packed">🏷️ New / Packed (Must set price)</option>
+              <option value="free">🎁 Free / Giving Away</option>
+            </select>
+          </div>
+
+          <div class="field" id="priceFieldContainer">
+            <label class="field-label" for="item-price">
+              <span>Price (₹ INR)</span>
+              <span class="field-opt">0 for free/negotiable</span>
+            </label>
+            <input id="item-price" type="number" name="price" min="0" step="1"
+                   placeholder="e.g. 25" value="0">
+          </div>
+
+          <div class="field" id="paymentModeContainer">
+            <label class="field-label" for="item-paymode">Accepted Payment</label>
+            <select id="item-paymode" name="payment_mode">
+              <option value="both">🤝 Both UPI & Cash</option>
+              <option value="upi">📱 UPI (GPay/PhonePe/Paytm)</option>
+              <option value="cash">💵 Cash on Handover</option>
+            </select>
+          </div>
+
+          <button class="btn btn-primary btn-full" type="submit">
+            Put on Shelf ✓
+          </button>
+        </form>
+      </div>
+
+      <!-- PANEL 2: Post a Request (I need something tonight) -->
+      <div id="panelRequest" style="{{ '' if tab == 'requests' else 'display:none;' }}">
+        <h3 style="font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 6px;">
+          <span>📢</span> Need something tonight?
+        </h3>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Ask fellow students in {{ me.hostel_name }}. Friends nearby can reach out!
+        </p>
+
+        <form class="add-form" method="post" action="{{ url_for('add_request') }}">
+          <div class="field">
+            <label class="field-label" for="req-name">What do you need?</label>
+            <input id="req-name" type="text" name="name"
+                   placeholder="e.g. Type-C charger, Paracetamol, scissors…"
+                   maxlength="100" required autocomplete="off">
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="req-cat">Category</label>
+            <select id="req-cat" name="category">
+              {% for cat, emoji in categories.items() %}
+                <option value="{{ cat }}">{{ emoji }} {{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="req-urgency">Urgency</label>
+            <select id="req-urgency" name="urgency">
+              <option value="tonight">🌙 Tonight</option>
+              <option value="urgent">🚨 Urgent (Need ASAP)</option>
+              <option value="anytime">📦 Anytime this week</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="req-price">
+              <span>Willing to Pay (₹ INR)</span>
+              <span class="field-opt">0 for free/borrow</span>
+            </label>
+            <input id="req-price" type="number" name="price_offer" min="0" step="1"
+                   placeholder="e.g. 25" value="0">
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="req-note">
+              <span>Note / Details</span>
+              <span class="field-opt">Optional</span>
+            </label>
+            <input id="req-note" type="text" name="note"
+                   placeholder="e.g. Need for 30 mins to charge phone" maxlength="200">
+          </div>
+
+          <!-- Room Delivery Tip Option -->
+          <div class="field" style="margin-top: 0.75rem;">
+            <label class="field-label" for="req-delivery">
+              <span>🛵 Room Delivery Option</span>
+              <span class="field-opt">Micro-fee</span>
+            </label>
+            <select id="req-delivery" name="delivery_tip">
+              <option value="0">🚶 I'll self-pickup (₹0)</option>
+              <option value="2" selected>🚪 Doorstep Room Delivery (+₹2)</option>
+              <option value="5">🚀 Fast Delivery (+₹5)</option>
+            </select>
+          </div>
+
+          <!-- Anonymous / Safe Request Option -->
+          <div style="margin-top: 0.75rem; background: rgba(124, 92, 255, 0.08); border: 1px solid rgba(124, 92, 255, 0.25); border-radius: 8px; padding: 0.6rem 0.75rem;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #c4b5fd; cursor: pointer; user-select: none;">
+              <input type="checkbox" name="is_anonymous" value="1" style="width: 16px; height: 16px; min-height: 16px; accent-color: #7c5cff;">
+              <span>🔒 <strong>Post Anonymously</strong> (Hides your name; for pads, meds & sensitive needs)</span>
+            </label>
+          </div>
+
+          <button class="btn btn-primary btn-full" type="submit" style="background: linear-gradient(135deg, #a78bfa, #7c5cff); color: #fff; margin-top: 1rem;">
+            Post Request 📢
+          </button>
+        </form>
+      </div>
     </div>
 
     <!-- Card 3: Your Shelf (Items + Requests Management) -->
@@ -1195,6 +1251,25 @@
 </div>
 
 <script>
+  function switchSidebarAction(type) {
+    const btnShare = document.getElementById('btnShareTab');
+    const btnRequest = document.getElementById('btnRequestTab');
+    const panelShare = document.getElementById('panelShare');
+    const panelRequest = document.getElementById('panelRequest');
+
+    if (type === 'share') {
+      if (btnShare) btnShare.className = 'tab-switch-btn active';
+      if (btnRequest) btnRequest.className = 'tab-switch-btn';
+      if (panelShare) panelShare.style.display = 'block';
+      if (panelRequest) panelRequest.style.display = 'none';
+    } else {
+      if (btnShare) btnShare.className = 'tab-switch-btn';
+      if (btnRequest) btnRequest.className = 'tab-switch-btn active-purple';
+      if (panelShare) panelShare.style.display = 'none';
+      if (panelRequest) panelRequest.style.display = 'block';
+    }
+  }
+
   function handleConditionChange(val) {
     const priceField = document.getElementById('item-price');
     const payModeContainer = document.getElementById('paymentModeContainer');
