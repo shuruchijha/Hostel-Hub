@@ -22,7 +22,9 @@ if "DATABASE_URL=" in raw_db_url:
 if raw_db_url.startswith("psql "):
     raw_db_url = raw_db_url.replace("psql ", "").strip().strip("'\"")
 if raw_db_url.startswith("postgres://"):
-    raw_db_url = "postgresql://" + raw_db_url[len("postgres://"):]
+    raw_db_url = "postgresql+psycopg2://" + raw_db_url[len("postgres://"):]
+elif raw_db_url.startswith("postgresql://") and "+psycopg" not in raw_db_url:
+    raw_db_url = "postgresql+psycopg2://" + raw_db_url[len("postgresql://"):]
 
 # If external Render PostgreSQL URL, ensure sslmode=require
 if ("render.com" in raw_db_url or "supabase" in raw_db_url) and "sslmode" not in raw_db_url:
