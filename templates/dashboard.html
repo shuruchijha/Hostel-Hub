@@ -430,43 +430,34 @@
           </p>
         </div>
       </div>
-      <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-        <button type="button" id="pwaInstallBtn" onclick="triggerPWAInstall()" class="btn btn-sm" style="background: rgba(245, 166, 35, 0.18); color: var(--amber-bright); border: 1px solid rgba(245, 166, 35, 0.4); font-size: 0.76rem; padding: 4px 8px;">
-          📲 Install App
-        </button>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
         <a href="https://api.whatsapp.com/send?text={{ ('🏢 *HostelHub — ' ~ (me.college_name or 'Our Campus') ~ '*\nCheck what fellow hostellers in ' ~ me.hostel_name ~ ' have, need or want delivered right now:\n' ~ request.url_root)|urlencode }}"
            target="_blank" rel="noopener"
            class="btn btn-sm"
-           style="background: rgba(37, 211, 102, 0.15); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.35); font-size: 0.76rem; padding: 4px 8px;"
+           style="background: rgba(37, 211, 102, 0.12); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.25); font-size: 0.78rem; padding: 5px 10px; border-radius: 10px;"
            title="Invite or share with your hostel WhatsApp group">
-          💬 WhatsApp
+          💬 Share
         </a>
-        <button type="button" onclick="openRulesModal()" class="btn btn-ghost btn-sm" title="Hostel Community Rules">
-          💡 Rules
+        <button type="button" id="pwaInstallBtn" onclick="triggerPWAInstall()" class="btn btn-sm"
+                style="background: rgba(245, 166, 35, 0.12); color: var(--amber-bright); border: 1px solid rgba(245, 166, 35, 0.3); font-size: 0.78rem; padding: 5px 10px; border-radius: 10px;">
+          📲 App
         </button>
-        <a href="{{ url_for('chat_inbox') }}" class="btn btn-ghost btn-sm">
-          💬 Chats
-          {% if unread_chat_count %}
-            <span class="badge badge-amber" style="padding: 1px 5px; font-size: 0.68rem;">{{ unread_chat_count }}</span>
-          {% endif %}
-        </a>
       </div>
     </div>
 
-    <!-- Top Feed Tabs: Available Shelf vs Who's Looking vs Campus Delivery -->
+    <!-- Top Feed Tabs: Clean, Sober, Classy -->
     <div class="feed-tabs" role="tablist">
       <a href="{{ url_for('dashboard', tab='shelf', q=q, category=category) }}"
          class="feed-tab {{ 'active' if tab == 'shelf' else '' }}" role="tab">
-        🛍️ Available on Shelf ({{ results|length if searching else recent|length }})
+        🛍️ Shelf ({{ results|length if searching else recent|length }})
       </a>
       <a href="{{ url_for('dashboard', tab='requests', q=q, category=category) }}"
          class="feed-tab {{ 'active' if tab == 'requests' else '' }}" role="tab">
-        📢 Who's Looking for What ({{ active_requests|length }})
+        📢 Needs ({{ active_requests|length }})
       </a>
       <a href="{{ url_for('dashboard', tab='delivery', q=q, category=category) }}"
-         class="feed-tab {{ 'active' if tab == 'delivery' else '' }}" role="tab" style="position:relative;">
-        🛵 Campus Delivery & Errands ({{ active_deliveries|length }})
-        <span class="badge badge-amber" style="font-size:0.62rem; padding:1px 5px; margin-left:4px;">Earn ₹</span>
+         class="feed-tab {{ 'active' if tab == 'delivery' else '' }}" role="tab">
+        🛵 Deliveries ({{ active_deliveries|length }})
       </a>
     </div>
 
@@ -675,11 +666,9 @@
                 <span class="field-opt" style="color:var(--amber);">Student runner tip</span>
               </label>
               <select id="deliv-fee" name="delivery_fee">
-                <option value="10">₹10 (Quick small errand)</option>
-                <option value="15" selected>₹15 (Standard room delivery)</option>
-                <option value="20">₹20 (Generous reward)</option>
-                <option value="30">₹30 (Heavy items / Long walk)</option>
-                <option value="50">₹50 (Outside campus / Urgent)</option>
+                <option value="2" selected>₹2 (Doorstep Room Delivery)</option>
+                <option value="5">₹5 (🚀 Fast Delivery)</option>
+                <option value="10">₹10 (Generous Tip)</option>
               </select>
             </div>
           </div>
@@ -1029,10 +1018,9 @@
             <span class="field-opt">Micro-fee</span>
           </label>
           <select id="req-delivery" name="delivery_tip">
-            <option value="0">🚶 I'll self-pickup from their room (₹0)</option>
-            <option value="2">🚪 Deliver to my door (+₹2 tip)</option>
-            <option value="5">🚪 Deliver to my door (+₹5 tip)</option>
-            <option value="10">⚡ Fast Room Delivery (+₹10 tip)</option>
+            <option value="0">🚶 I'll self-pickup (₹0)</option>
+            <option value="2" selected>🚪 Doorstep Room Delivery (+₹2)</option>
+            <option value="5">🚀 Fast Delivery (+₹5)</option>
           </select>
         </div>
 

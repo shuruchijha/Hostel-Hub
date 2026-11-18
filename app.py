@@ -69,6 +69,7 @@ db = SQLAlchemy(app)
 from colleges import ALL_COLLEGES
 from hostels import ALL_HOSTELS
 from blocks import ALL_BLOCKS
+from campus_directory import get_campus_data, CAMPUS_DATA
 
 POPULAR_COLLEGES = ALL_COLLEGES
 POPULAR_HOSTELS = ALL_HOSTELS
@@ -167,7 +168,7 @@ class DeliveryOrder(db.Model):
     shop_location  = db.Column(db.String(120), nullable=False) # e.g. "Main Canteen", "Night Maggie Point", "Gate 2 Xerox"
     items_summary  = db.Column(db.String(300), nullable=False) # e.g. "1 Cold coffee, 1 veg puff"
     estimated_cost = db.Column(db.Float, default=0.0)          # approx cost of items
-    delivery_fee   = db.Column(db.Float, default=15.0)         # delivery tip / reward in INR (e.g. ₹15, ₹20)
+    delivery_fee   = db.Column(db.Float, default=2.0)          # delivery fee: ₹2 standard, ₹5 fast delivery
     special_notes  = db.Column(db.String(250), nullable=True)  # room instructions
     status         = db.Column(db.String(20), default="open")  # open | claimed | completed | cancelled
     created_at     = db.Column(db.DateTime, default=datetime.utcnow)
@@ -377,7 +378,7 @@ def signup():
                 referrer.referral_points = (referrer.referral_points or 0) + 10
 
             db.session.commit()
-            session.permanent = True   # auto-remember new users
+            session.permanent = True   # auto-remember new users across multiple devices
             session["user_id"] = user.id
             if referrer:
                 flash(f"Welcome! You joined via {referrer.name}'s invite 🎉 They earned 10 bonus points!")
@@ -386,9 +387,11 @@ def signup():
             after = session.pop("after_login", None)
             return redirect(after or url_for("dashboard"))
 
+    campus = get_campus_data(request.form.get("college_name", ""))
     return render_template("signup.html", error=error, form=request.form,
-                           hostels=POPULAR_HOSTELS, blocks=GIRLS_BLOCKS,
-                           popular_colleges=POPULAR_COLLEGES, popular_hostels=POPULAR_HOSTELS,
+                           hostels=campus["hostels"], blocks=campus["blocks"],
+                           block_label=campus.get("block_label", "Block / Wing"),
+                           popular_colleges=POPULAR_COLLEGES, campus_data=CAMPUS_DATA,
                            ref_code=ref_code)
 
 
@@ -402,8 +405,9 @@ def login():
         email = request.form.get("email", "").strip().lower()
         user  = User.query.filter_by(email=email).first()
         if user and check_password_hash(user.password_hash, request.form.get("password", "")):
-            remember = bool(request.form.get("remember_me"))
-            session.permanent = remember   # True = 6 months, False = browser session
+            # Remember me checked: permanent 6-month session; users stay logged in across multiple devices
+            remember = bool(request.form.get("remember_me", "1"))
+            session.permanent = remember
             session["user_id"] = user.id
             after = session.pop("after_login", None)
             return redirect(after or url_for("dashboard"))
@@ -626,7 +630,7 @@ def create_delivery():
     shop_location = request.form.get("shop_location", "").strip()[:100]
     items_summary = request.form.get("items_summary", "").strip()[:250]
     cost_str      = request.form.get("estimated_cost", "0").strip()
-    fee_str       = request.form.get("delivery_fee", "15").strip()
+    fee_str       = request.form.get("delivery_fee", "2").strip()
     notes         = request.form.get("special_notes", "").strip()[:200]
 
     if not shop_location or not items_summary:
@@ -881,9 +885,21 @@ def settings():
         flash("Personal profile and payment details updated successfully! ✓")
         return redirect(url_for("settings"))
 
-    return render_template("settings.html", user=user, hostels=POPULAR_HOSTELS,
-                           popular_colleges=POPULAR_COLLEGES, popular_hostels=POPULAR_HOSTELS,
-                           blocks=GIRLS_BLOCKS)
+    campus = get_campus_data(user.college_name)
+    return render_template("settings.html", user=user,
+                           popular_colleges=POPULAR_COLLEGES,
+                           hostels=campus["hostels"],
+                           blocks=campus["blocks"],
+                           block_label=campus.get("block_label", "Block / Wing"),
+                           campus_data=CAMPUS_DATA)
+
+
+@app.route("/api/campus-details")
+def campus_details():
+    from flask import jsonify
+    college = request.args.get("college", "").strip()
+    data = get_campus_data(college)
+    return jsonify(data)
 
 
 # ════════════════════════════════════════════

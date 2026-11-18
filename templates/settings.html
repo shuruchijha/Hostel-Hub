@@ -109,12 +109,12 @@
       <div class="field" style="margin-top: 1.1rem;">
         <label class="field-label" for="hostel_name">
           <span>Hostel Name</span>
-          <span class="field-opt">Select or Type</span>
+          <span class="field-opt" id="hostelCountHint">Campus Specific</span>
         </label>
         <input id="hostel_name" type="text" name="hostel_name" list="hostelList"
-               value="{{ user.hostel_name or '' }}" placeholder="e.g. Girls Hostel, Boys Hostel, Hostel 7…" required>
+               value="{{ user.hostel_name or '' }}" placeholder="Select or type your hostel…" required>
         <datalist id="hostelList">
-          {% for h in popular_hostels %}
+          {% for h in hostels %}
             <option value="{{ h }}">
           {% endfor %}
         </datalist>
@@ -124,9 +124,16 @@
       <div class="block-room-row">
         <!-- Block -->
         <div class="field" id="blockFieldWrap">
-          <label class="field-label" for="block">Block</label>
-          <input id="blockInput" type="text" name="block" value="{{ user.block or '' }}"
-                 placeholder="e.g. Krishnaveni, B-Wing…" maxlength="80">
+          <label class="field-label" for="block">
+            <span id="blockLabel">{{ block_label or 'Block / Wing' }}</span>
+          </label>
+          <input id="blockInput" type="text" name="block" list="blockList" value="{{ user.block or '' }}"
+                 placeholder="e.g. Block A, Wing 1…" maxlength="80">
+          <datalist id="blockList">
+            {% for b in blocks %}
+              <option value="{{ b }}">
+            {% endfor %}
+          </datalist>
         </div>
 
         <!-- Room No -->
@@ -245,13 +252,56 @@
 </div>
 
 <script>
-  function handleHostelChange(val) {
-    const blockInput = document.getElementById('blockInput');
-    if (val === 'Girls Hostel') {
-      blockInput.placeholder = "e.g. Krishnaveni, Bhima, Munneru";
-    } else {
-      blockInput.placeholder = "e.g. Block A, Wing 2";
+  const campusData = {{ campus_data|tojson }};
+  const collegeInput = document.getElementById('college_name');
+  const hostelList = document.getElementById('hostelList');
+  const blockList = document.getElementById('blockList');
+  const blockLabel = document.getElementById('blockLabel');
+  const hostelCountHint = document.getElementById('hostelCountHint');
+
+  function updateCampusOptions(collegeName) {
+    if (!collegeName) return;
+    const norm = collegeName.toLowerCase().trim();
+    let match = null;
+
+    for (const key in campusData) {
+      if (norm.includes(key)) {
+        match = campusData[key];
+        break;
+      }
     }
+
+    if (!match) {
+      fetch('/api/campus-details?college=' + encodeURIComponent(collegeName))
+        .then(res => res.json())
+        .then(data => applyCampusData(data))
+        .catch(() => {});
+      return;
+    }
+    applyCampusData(match);
+  }
+
+  function applyCampusData(data) {
+    if (!data) return;
+    if (data.hostels && hostelList) {
+      hostelList.innerHTML = data.hostels.map(h => `<option value="${h}">`).join('');
+      if (hostelCountHint) hostelCountHint.textContent = `${data.hostels.length} hostels for campus`;
+    }
+    if (data.blocks && blockList) {
+      blockList.innerHTML = data.blocks.map(b => `<option value="${b}">`).join('');
+    }
+    if (data.block_label && blockLabel) {
+      blockLabel.textContent = data.block_label;
+    }
+  }
+
+  if (collegeInput) {
+    collegeInput.addEventListener('input', function() {
+      updateCampusOptions(this.value);
+    });
+    collegeInput.addEventListener('change', function() {
+      updateCampusOptions(this.value);
+    });
   }
 </script>
 {% endblock %}

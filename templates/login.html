@@ -72,6 +72,53 @@
     font-size: .85rem;
     color: var(--text-muted);
   }
+
+  /* ── Custom Bulletproof Checkbox ── */
+  .remember-chk-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 1.15rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .remember-chk-wrap input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+  }
+  .custom-checkbox-box {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+  .custom-checkbox-box .chk-tick {
+    width: 12px;
+    height: 10px;
+    display: none;
+  }
+  .remember-chk-wrap input[type="checkbox"]:checked + .custom-checkbox-box {
+    background: var(--amber);
+    border-color: var(--amber);
+    box-shadow: 0 0 12px rgba(245, 166, 35, 0.4);
+  }
+  .remember-chk-wrap input[type="checkbox"]:checked + .custom-checkbox-box .chk-tick {
+    display: block;
+  }
+  .remember-label-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.3;
+  }
 </style>
 {% endblock %}
 
@@ -126,16 +173,20 @@
           </div>
         </div>
 
-        <!-- Remember Me -->
-        <div style="display:flex; align-items:center; gap:10px; margin-top:1rem;">
-          <input type="checkbox" id="remember_me" name="remember_me" value="1"
-                 style="width:18px;height:18px;min-height:18px;accent-color:var(--amber);cursor:pointer;" checked>
-          <label for="remember_me" style="font-size:0.85rem;color:var(--text-muted);cursor:pointer;user-select:none;">
-            Keep me logged in on this device <span style="color:var(--amber);">(6 months)</span>
-          </label>
-        </div>
+        <!-- Remember Me Custom Checkbox -->
+        <label for="remember_me" class="remember-chk-wrap">
+          <input type="checkbox" id="remember_me" name="remember_me" value="1" checked>
+          <span class="custom-checkbox-box">
+            <svg class="chk-tick" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1.5 5.2L4.5 8.2L10.5 1.8" stroke="#0b0910" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="remember-label-text">
+            Keep me logged in on this device <span style="color: var(--amber); font-weight: 600;">(6 months)</span>
+          </span>
+        </label>
 
-        <button class="btn btn-primary btn-full" type="submit" style="margin-top:1rem;">Log in →</button>
+        <button class="btn btn-primary btn-full" type="submit" style="margin-top:1.2rem;">Log in →</button>
       </form>
 
       <p class="auth-switch">
