@@ -1,8 +1,9 @@
-// Midnight Pantry PWA Service Worker
-const CACHE_NAME = 'midnight-pantry-v2';
+// HostelHub PWA Service Worker
+const CACHE_NAME = 'hostelhub-v3';
 const STATIC_ASSETS = [
   '/',
   '/static/logo.png',
+  '/static/logo.svg',
   '/static/favicon.svg',
   '/static/manifest.json'
 ];

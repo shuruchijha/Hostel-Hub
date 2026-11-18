@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Dashboard · Midnight Pantry{% endblock %}
+{% block title %}Dashboard · HostelHub{% endblock %}
 
 {% block head %}
 <style>
@@ -415,7 +415,7 @@
     <!-- Welcome Greet Header -->
     <div class="greet">
       <div style="display: flex; align-items: center; gap: 14px;">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Midnight Pantry" style="width: 48px; height: 48px; border-radius: 14px; object-fit: cover; border: 1.5px solid rgba(245, 166, 35, 0.4); box-shadow: 0 0 16px rgba(245, 166, 35, 0.25); flex-shrink: 0;">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="HostelHub" style="width: 48px; height: 48px; border-radius: 14px; object-fit: cover; border: 1.5px solid rgba(245, 166, 35, 0.4); box-shadow: 0 0 16px rgba(245, 166, 35, 0.25); flex-shrink: 0;">
         <div>
           <h2>Hey, {{ me.name.split()[0] }} 👋</h2>
           <p>
@@ -429,14 +429,14 @@
         <button type="button" id="pwaInstallBtn" onclick="triggerPWAInstall()" class="btn btn-sm" style="background: rgba(245, 166, 35, 0.18); color: var(--amber-bright); border: 1px solid rgba(245, 166, 35, 0.4); font-size: 0.76rem; padding: 4px 8px;">
           📲 Install App
         </button>
-        <a href="https://api.whatsapp.com/send?text={{ ('🌙 *Midnight Pantry — ' ~ (me.college_name or 'Our Campus') ~ '*\nCheck what fellow hostellers in ' ~ me.hostel_name ~ ' have or need right now:\n' ~ request.url_root)|urlencode }}"
+        <a href="https://api.whatsapp.com/send?text={{ ('🏢 *HostelHub — ' ~ (me.college_name or 'Our Campus') ~ '*\nCheck what fellow hostellers in ' ~ me.hostel_name ~ ' have, need or want delivered right now:\n' ~ request.url_root)|urlencode }}"
            target="_blank" rel="noopener"
            class="btn btn-sm"
            style="background: rgba(37, 211, 102, 0.15); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.35); font-size: 0.76rem; padding: 4px 8px;"
            title="Invite or share with your hostel WhatsApp group">
           💬 WhatsApp
         </a>
-        <button type="button" onclick="openRulesModal()" class="btn btn-ghost btn-sm" title="Night Owl Community Rules">
+        <button type="button" onclick="openRulesModal()" class="btn btn-ghost btn-sm" title="Hostel Community Rules">
           💡 Rules
         </button>
         <a href="{{ url_for('chat_inbox') }}" class="btn btn-ghost btn-sm">
@@ -448,15 +448,20 @@
       </div>
     </div>
 
-    <!-- Top Feed Tabs: Available Shelf vs Who's Looking for What -->
+    <!-- Top Feed Tabs: Available Shelf vs Who's Looking vs Campus Delivery -->
     <div class="feed-tabs" role="tablist">
       <a href="{{ url_for('dashboard', tab='shelf', q=q, category=category) }}"
-         class="feed-tab {{ 'active' if tab != 'requests' else '' }}" role="tab">
+         class="feed-tab {{ 'active' if tab == 'shelf' else '' }}" role="tab">
         🛍️ Available on Shelf ({{ results|length if searching else recent|length }})
       </a>
       <a href="{{ url_for('dashboard', tab='requests', q=q, category=category) }}"
          class="feed-tab {{ 'active' if tab == 'requests' else '' }}" role="tab">
         📢 Who's Looking for What ({{ active_requests|length }})
+      </a>
+      <a href="{{ url_for('dashboard', tab='delivery', q=q, category=category) }}"
+         class="feed-tab {{ 'active' if tab == 'delivery' else '' }}" role="tab" style="position:relative;">
+        🛵 Campus Delivery & Errands ({{ active_deliveries|length }})
+        <span class="badge badge-amber" style="font-size:0.62rem; padding:1px 5px; margin-left:4px;">Earn ₹</span>
       </a>
     </div>
 
@@ -587,7 +592,7 @@
                 {% endif %}
 
                 <!-- 1-Tap Forward to WhatsApp Group -->
-                <a href="https://api.whatsapp.com/send?text={{ ('🚨 *Campus Need on Midnight Pantry*\nLooking for: *' ~ req.name ~ '*\nCampus: ' ~ (requester.college_name or 'Our Campus') ~ '\nHostel: ' ~ requester.hostel_name ~ (', ' ~ requester.block if requester.block else '') ~ '\n' ~ ('Urgency: ' ~ req.urgency ~ '\n') ~ (('🛵 Delivery tip: +₹' ~ req.delivery_tip|int ~ '\n') if req.delivery_tip > 0 else '') ~ '\nGot it? Tap to connect directly:\n' ~ request.url_root ~ 'chat/' ~ requester.id)|urlencode }}"
+                <a href="https://api.whatsapp.com/send?text={{ ('🚨 *Campus Need on HostelHub*\nLooking for: *' ~ req.name ~ '*\nCampus: ' ~ (requester.college_name or 'Our Campus') ~ '\nHostel: ' ~ requester.hostel_name ~ (', ' ~ requester.block if requester.block else '') ~ '\n' ~ ('Urgency: ' ~ req.urgency ~ '\n') ~ (('🛵 Delivery tip: +₹' ~ req.delivery_tip|int ~ '\n') if req.delivery_tip > 0 else '') ~ '\nGot it? Tap to connect directly:\n' ~ request.url_root ~ 'chat/' ~ requester.id)|urlencode }}"
                    target="_blank" rel="noopener"
                    class="btn btn-ghost btn-sm"
                    style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 5px; color: #25D366; border-color: rgba(37, 211, 102, 0.3); font-size: 0.74rem; padding: 4px 6px;"
@@ -609,8 +614,185 @@
       {% endif %}
 
     <!-- ══════════════════════════════════════════
-         TAB 1: AVAILABLE ON SHELF (DEFAULT)
+         TAB 3: CAMPUS DELIVERY & ROOM ERRANDS
          ══════════════════════════════════════════ -->
+    {% elif tab == 'delivery' %}
+
+      <div style="margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px;">
+          <span>🛵</span> Campus Delivery & Room Errands · {{ me.hostel_name }}
+        </h3>
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-top: 3px;">
+          Need canteen food, snacks, or printouts brought to your room? Or earn quick pocket money delivering for fellow hostellers on your way back!
+        </p>
+      </div>
+
+      <!-- Quick Action / Post Delivery Errand Card -->
+      <div class="card" style="background: rgba(26, 23, 36, 0.7); border: 1.5px solid rgba(245, 166, 35, 0.35); margin-bottom: 1.5rem; padding: 1.35rem; border-radius: var(--radius);">
+        <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--amber); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 6px;">
+          <span>⚡</span> Need Something Picked Up & Delivered to Your Room?
+        </h4>
+        <form method="post" action="{{ url_for('create_delivery') }}">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div class="field">
+              <label class="field-label" for="deliv-shop">Where to pick up from?</label>
+              <input id="deliv-shop" type="text" name="shop_location" list="commonShops"
+                     placeholder="e.g. Main Canteen, Nescafe, Gate 2 Xerox…" required autocomplete="off">
+              <datalist id="commonShops">
+                <option value="Main Campus Canteen">
+                <option value="Night Maggie & Paratha Point">
+                <option value="Gate 2 Xerox & Stationery">
+                <option value="Nescafe / Coffee Stall">
+                <option value="Pharmacy / Med Store Outside Gate">
+                <option value="Juice & Fruit Corner">
+                <option value="Hostel Tuck Shop">
+              </datalist>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="deliv-items">What items do you want?</label>
+              <input id="deliv-items" type="text" name="items_summary"
+                     placeholder="e.g. 1 Cold Coffee + 2 Samosas, or 5 printouts" required maxlength="250" autocomplete="off">
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="deliv-cost">
+                <span>Estimated Item Cost (₹)</span>
+                <span class="field-opt">Approx</span>
+              </label>
+              <input id="deliv-cost" type="number" name="estimated_cost" min="0" step="1"
+                     placeholder="e.g. 60" value="0">
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="deliv-fee">
+                <span>Delivery Reward / Fee (₹)</span>
+                <span class="field-opt" style="color:var(--amber);">Student runner tip</span>
+              </label>
+              <select id="deliv-fee" name="delivery_fee">
+                <option value="10">₹10 (Quick small errand)</option>
+                <option value="15" selected>₹15 (Standard room delivery)</option>
+                <option value="20">₹20 (Generous reward)</option>
+                <option value="30">₹30 (Heavy items / Long walk)</option>
+                <option value="50">₹50 (Outside campus / Urgent)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field" style="margin-top: 10px;">
+            <label class="field-label" for="deliv-notes">
+              <span>Drop-off Room Instructions</span>
+              <span class="field-opt">Private within hostel</span>
+            </label>
+            <input id="deliv-notes" type="text" name="special_notes"
+                   placeholder="e.g. Knock on Room {{ me.room_no }} or call when at ground floor lift" maxlength="200">
+          </div>
+
+          <button class="btn btn-primary" type="submit" style="margin-top: 12px; width: 100%; padding: 0.8rem; font-size: 0.95rem; font-weight: 700; background: linear-gradient(135deg, var(--amber), #e08b15); color: #000;">
+            🚀 Post Room Delivery Request · Offer Reward
+          </button>
+        </form>
+      </div>
+
+      <!-- Feed of Active Campus Deliveries -->
+      {% if active_deliveries %}
+        <div class="item-grid">
+          {% for order, req_user in active_deliveries %}
+            <div class="request-card" style="border-left: 4px solid {{ '#00d084' if order.status == 'claimed' else 'var(--amber)' }};">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                <div>
+                  <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                    <span class="badge badge-amber" style="font-weight: 800; font-size: 0.82rem; padding: 3px 8px;">
+                      💰 Earn ₹{{ order.delivery_fee|int }}
+                    </span>
+                    {% if order.status == 'claimed' %}
+                      <span class="badge" style="background: rgba(0, 208, 132, 0.15); color: #00d084; border: 1px solid rgba(0, 208, 132, 0.4);">
+                        🏃 Claimed · Out for Delivery
+                      </span>
+                    {% else %}
+                      <span class="badge badge-muted">
+                        🛵 Open Errand
+                      </span>
+                    {% endif %}
+                  </div>
+                  <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text); margin-top: 6px;">
+                    📍 {{ order.shop_location }}
+                  </h4>
+                  <div style="font-size: 0.92rem; color: #fff; margin-top: 3px; font-weight: 500;">
+                    Items: <strong>{{ order.items_summary }}</strong>
+                  </div>
+                  {% if order.estimated_cost and order.estimated_cost > 0 %}
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                      Approx item price: ₹{{ order.estimated_cost|int }} + ₹{{ order.delivery_fee|int }} delivery fee
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              {% if order.special_notes %}
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 8px; font-style: italic; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 6px;">
+                  💬 Note: "{{ order.special_notes }}"
+                </p>
+              {% endif %}
+
+              <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div style="font-size: 0.78rem; color: var(--text-muted);">
+                  Requested by <strong style="color: var(--text);">{{ req_user.name.split()[0] }}</strong>
+                  · {{ req_user.hostel_name }}{% if req_user.block %} ({{ req_user.block }}){% endif %}
+                </div>
+
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  {% if order.requester_id == me.id %}
+                    <!-- Requester Actions -->
+                    {% if order.status == 'claimed' %}
+                      <a href="{{ url_for('chat_detail', target_id=order.runner_id) }}" class="btn btn-sm btn-ghost" style="color: var(--amber-bright);">
+                        💬 Chat with Runner
+                      </a>
+                      <form method="post" action="{{ url_for('complete_delivery', order_id=order.id) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-primary" style="background: var(--success); color: #000; font-weight: 700;">
+                          Received & Paid ✓
+                        </button>
+                      </form>
+                    {% else %}
+                      <form method="post" action="{{ url_for('cancel_delivery', order_id=order.id) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--danger); font-size: 0.76rem;">
+                          ✕ Cancel Request
+                        </button>
+                      </form>
+                    {% endif %}
+                  {% else %}
+                    <!-- Runner Actions -->
+                    {% if order.status == 'open' %}
+                      <form method="post" action="{{ url_for('claim_delivery', order_id=order.id) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, var(--amber-bright), #e08b15); color: #000; font-weight: 800; padding: 6px 12px;">
+                          🛵 I'll Deliver This! (+₹{{ order.delivery_fee|int }})
+                        </button>
+                      </form>
+                    {% elif order.runner_id == me.id %}
+                      <a href="{{ url_for('chat_detail', target_id=order.requester_id) }}" class="btn btn-sm btn-ghost" style="color: var(--amber-bright);">
+                        💬 Chat with {{ req_user.name.split()[0] }}
+                      </a>
+                      <form method="post" action="{{ url_for('complete_delivery', order_id=order.id) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-primary" style="background: var(--success); color: #000; font-weight: 700;">
+                          Mark Handed Over ✓
+                        </button>
+                      </form>
+                    {% endif %}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="card" style="text-align: center; padding: 3rem 1.5rem;">
+          <div style="font-size: 2.8rem; margin-bottom: 0.75rem;">🛵</div>
+          <h3 style="font-size: 1.15rem; font-weight: 700;">No active campus errands right now</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; max-width: 420px; margin-left: auto; margin-right: auto;">
+            Heading down to the canteen, nescafe, or gate? You can pick up snacks or printouts for hostel mates and earn ₹15–₹30 per trip! Or post a request above.
+          </p>
+        </div>
+      {% endif %}
     {% else %}
 
       {% if searching %}
@@ -683,7 +865,7 @@
                      class="btn btn-primary btn-sm" style="flex: 1.2; padding: 0.5rem; font-size: 0.8rem; justify-content: center; gap: 4px;">
                     Shelf & Pay →
                   </a>
-                  <a href="https://api.whatsapp.com/send?text={{ ('🛍️ *Available on Midnight Pantry*\nItem: *' ~ item.name ~ '*\nCondition: ' ~ item.condition ~ '\nHostel: ' ~ owner.hostel_name ~ (', ' ~ owner.block if owner.block else '') ~ '\nCheck it out here:\n' ~ request.url_root)|urlencode }}"
+                  <a href="https://api.whatsapp.com/send?text={{ ('🛍️ *Available on HostelHub*\nItem: *' ~ item.name ~ '*\nCondition: ' ~ item.condition ~ '\nHostel: ' ~ owner.hostel_name ~ (', ' ~ owner.block if owner.block else '') ~ '\nCheck it out here:\n' ~ request.url_root)|urlencode }}"
                      target="_blank" rel="noopener"
                      class="btn btn-ghost btn-sm"
                      style="padding: 0.5rem 0.65rem; color: #25D366; border-color: rgba(37, 211, 102, 0.35); font-size: 0.85rem;"
@@ -752,7 +934,7 @@
                      class="btn btn-primary btn-sm" style="flex: 1.2; padding: 0.5rem; font-size: 0.8rem; justify-content: center; gap: 4px;">
                     Shelf & Pay →
                   </a>
-                  <a href="https://api.whatsapp.com/send?text={{ ('🛍️ *Available on Midnight Pantry*\nItem: *' ~ item.name ~ '*\nCondition: ' ~ item.condition ~ '\nHostel: ' ~ owner.hostel_name ~ (', ' ~ owner.block if owner.block else '') ~ '\nCheck it out here:\n' ~ request.url_root)|urlencode }}"
+                  <a href="https://api.whatsapp.com/send?text={{ ('🛍️ *Available on HostelHub*\nItem: *' ~ item.name ~ '*\nCondition: ' ~ item.condition ~ '\nHostel: ' ~ owner.hostel_name ~ (', ' ~ owner.block if owner.block else '') ~ '\nCheck it out here:\n' ~ request.url_root)|urlencode }}"
                      target="_blank" rel="noopener"
                      class="btn btn-ghost btn-sm"
                      style="padding: 0.5rem 0.65rem; color: #25D366; border-color: rgba(37, 211, 102, 0.35); font-size: 0.85rem;"

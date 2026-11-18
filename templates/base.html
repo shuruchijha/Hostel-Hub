@@ -1,17 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="color-scheme: dark;">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>{% block title %}Midnight Pantry · Campus Night Essentials{% endblock %}</title>
+  <title>{% block title %}HostelHub · Verified Campus Marketplace & Errands{% endblock %}</title>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <meta name="theme-color" content="#0a090e">
+  <meta name="color-scheme" content="dark">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Midnight Pantry">
+  <meta name="apple-mobile-web-app-title" content="HostelHub">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- Fonts: display=swap so text shows before fonts load -->
@@ -22,6 +23,7 @@
        DESIGN TOKENS & PALETTE
     ═══════════════════════════════════════════ */
     :root {
+      color-scheme: dark;
       --bg:          #0a090e;
       --surface:     #13111a;
       --surface2:    #1a1724;
@@ -513,12 +515,52 @@
       transition: var(--transition);
       -webkit-appearance: none;
       appearance: none;
+      color-scheme: dark;
     }
     input::placeholder, textarea::placeholder { color: var(--text-faint); }
     input:focus, select:focus, textarea:focus {
       border-color: var(--amber);
       background: #201c2c;
       box-shadow: 0 0 0 3px var(--amber-glow);
+    }
+
+    /* ═══════════════════════════════════════════
+       DARK THEME AUTOFILL & DATALIST STYLING
+    ═══════════════════════════════════════════ */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover, 
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active,
+    textarea:-webkit-autofill,
+    select:-webkit-autofill {
+      -webkit-text-fill-color: #f4f3f7 !important;
+      -webkit-box-shadow: 0 0 0px 1000px #1a1724 inset !important;
+      box-shadow: 0 0 0px 1000px #1a1724 inset !important;
+      caret-color: #f4f3f7 !important;
+      border-color: rgba(245, 166, 35, 0.45) !important;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+
+    /* Datalist arrow / calendar indicator */
+    input::-webkit-calendar-picker-indicator {
+      filter: invert(0.85);
+      cursor: pointer;
+      opacity: 0.8;
+      padding: 4px;
+    }
+    input::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+      filter: invert(1);
+    }
+
+    /* Datalist input and options */
+    input[list] {
+      background: var(--surface2) !important;
+      color: var(--text) !important;
+    }
+    datalist, option {
+      background-color: #1a1724 !important;
+      color: #f4f3f7 !important;
     }
 
     select {
@@ -730,7 +772,7 @@
 <div class="rules-modal-overlay" id="rulesModal" onclick="if(event.target === this) closeRulesModal()">
   <div class="rules-modal-box">
     <div class="rules-modal-header">
-      <h4><span>🌙</span> Midnight Pantry Safety Rules</h4>
+      <h4><span>🏢</span> HostelHub Campus Rules</h4>
       <button type="button" class="rules-modal-close" onclick="closeRulesModal()" aria-label="Close">✕</button>
     </div>
     <div class="tip-item">
@@ -741,10 +783,17 @@
       </div>
     </div>
     <div class="tip-item">
-      <span style="font-size:1.2rem;">🍜</span>
+      <span style="font-size:1.2rem;">🛍️</span>
       <div>
         <strong style="color:var(--text);">Permitted Essentials:</strong><br>
-        Packaged food, toiletries, medicine, stationery & collegiate essentials.
+        Packaged food, cycle gear, toiletries, medicine, stationery & campus essentials.
+      </div>
+    </div>
+    <div class="tip-item">
+      <span style="font-size:1.2rem;">🛵</span>
+      <div>
+        <strong style="color:var(--text);">Campus Errands & Deliveries:</strong><br>
+        Earn money by picking up canteen food or xerox for hostel mates on your way!
       </div>
     </div>
     <div class="tip-item">
@@ -764,15 +813,18 @@
 <nav class="nav" role="navigation" aria-label="Main navigation">
   <div class="nav-inner">
     <a href="{{ url_for('dashboard') if me else url_for('login') }}" class="nav-logo">
-      <img src="{{ url_for('static', filename='logo.png') }}" alt="Midnight Pantry Logo" class="nav-brand-logo">
-      <span class="brand-highlight">Midnight Pantry</span>
-      <span class="nav-tag-pill">Hostel Hub</span>
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="HostelHub Logo" class="nav-brand-logo">
+      <span class="brand-highlight">HostelHub</span>
+      <span class="nav-tag-pill">Campus Life</span>
     </a>
     <div class="nav-spacer"></div>
     <div class="nav-links">
       {% if me %}
         <a href="{{ url_for('dashboard') }}" style="display:flex; align-items:center; gap:5px;">
           <span>🏠 Shelf</span>
+        </a>
+        <a href="{{ url_for('dashboard', tab='delivery') }}" style="display:flex; align-items:center; gap:5px;" title="Campus Errands & Room Delivery">
+          <span>🛵 Delivery</span>
         </a>
         <a href="{{ url_for('chat_inbox') }}" style="display:flex; align-items:center; gap:5px;">
           <span>💬 Chat</span>
@@ -831,9 +883,13 @@
 <!-- ───── MOBILE BOTTOM NAVIGATION ───── -->
 {% if me %}
 <div class="mobile-bottom-nav" role="navigation" aria-label="Mobile Navigation">
-  <a href="{{ url_for('dashboard') }}" class="mobile-nav-item {{ 'active' if request.endpoint == 'dashboard' else '' }}">
+  <a href="{{ url_for('dashboard') }}" class="mobile-nav-item {{ 'active' if request.endpoint == 'dashboard' and request.args.get('tab') != 'delivery' else '' }}">
     <span class="mobile-nav-icon">🏠</span>
     <span class="mobile-nav-label">Shelf</span>
+  </a>
+  <a href="{{ url_for('dashboard', tab='delivery') }}" class="mobile-nav-item {{ 'active' if request.endpoint == 'dashboard' and request.args.get('tab') == 'delivery' else '' }}">
+    <span class="mobile-nav-icon">🛵</span>
+    <span class="mobile-nav-label">Delivery</span>
   </a>
   <a href="{{ url_for('chat_inbox') }}" class="mobile-nav-item {{ 'active' if request.endpoint in ['chat_inbox', 'chat_detail'] else '' }}">
     <span class="mobile-nav-icon">
@@ -862,8 +918,8 @@
 <!-- ───── FOOTER ───── -->
 <footer>
   <div style="display:inline-flex; align-items:center; gap:8px; justify-content:center; flex-wrap:wrap;">
-    <img src="{{ url_for('static', filename='logo.png') }}" alt="Midnight Pantry" style="width:20px; height:20px; border-radius:6px; vertical-align:middle; border:1px solid rgba(245,166,35,0.35);">
-    <span><strong>Midnight Pantry</strong> · Verified peer-to-peer hostel sharing · Safe, private & student-run</span>
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="HostelHub" style="width:20px; height:20px; border-radius:6px; vertical-align:middle; border:1px solid rgba(245,166,35,0.35);">
+    <span><strong>HostelHub</strong> · Verified student marketplace & campus delivery network · Safe, private & student-run</span>
   </div>
 </footer>
 
@@ -922,7 +978,7 @@
         deferredPrompt = null;
       });
     } else {
-      alert("To install Midnight Pantry on your phone:\n• Android (Chrome): Tap the 3 dots (⋮) ➔ 'Install app' or 'Add to Home screen'\n• iPhone (Safari): Tap the Share button (⬆) ➔ 'Add to Home Screen'");
+      alert("To install HostelHub on your phone:\n• Android (Chrome): Tap the 3 dots (⋮) ➔ 'Install app' or 'Add to Home screen'\n• iPhone (Safari): Tap the Share button (⬆) ➔ 'Add to Home Screen'");
     }
   }
 </script>

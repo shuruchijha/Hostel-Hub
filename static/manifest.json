@@ -1,7 +1,7 @@
 {
-  "name": "Midnight Pantry · Campus Sharing",
-  "short_name": "Midnight Pantry",
-  "description": "Verified student hostel pantry and peer-to-peer sharing hub",
+  "name": "HostelHub · Student Marketplace & Errands",
+  "short_name": "HostelHub",
+  "description": "Verified campus hostel marketplace, essentials sharing & room delivery network",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

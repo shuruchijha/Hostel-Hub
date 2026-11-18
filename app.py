@@ -130,6 +130,24 @@ class ItemRequest(db.Model):
     user = db.relationship("User", backref="item_requests")
 
 
+class DeliveryOrder(db.Model):
+    id             = db.Column(db.Integer, primary_key=True)
+    requester_id   = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    runner_id      = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True) # Runner student who claims errand
+    shop_location  = db.Column(db.String(120), nullable=False) # e.g. "Main Canteen", "Night Maggie Point", "Gate 2 Xerox"
+    items_summary  = db.Column(db.String(300), nullable=False) # e.g. "1 Cold coffee, 1 veg puff"
+    estimated_cost = db.Column(db.Float, default=0.0)          # approx cost of items
+    delivery_fee   = db.Column(db.Float, default=15.0)         # delivery tip / reward in INR (e.g. ₹15, ₹20)
+    special_notes  = db.Column(db.String(250), nullable=True)  # room instructions
+    status         = db.Column(db.String(20), default="open")  # open | claimed | completed | cancelled
+    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+    accepted_at    = db.Column(db.DateTime, nullable=True)
+    completed_at   = db.Column(db.DateTime, nullable=True)
+
+    requester = db.relationship("User", foreign_keys=[requester_id], backref="requested_deliveries")
+    runner    = db.relationship("User", foreign_keys=[runner_id], backref="claimed_deliveries")
+
+
 class Community(db.Model):
     id          = db.Column(db.Integer, primary_key=True)
     name        = db.Column(db.String(100), nullable=False)
@@ -260,7 +278,7 @@ def upi_intent_url(upi_id_or_phone: str, seller_name: str, price: float, item_na
     if not vpa:
         return ""
     pn = quote(seller_name or "HostelMate")
-    tn = quote(f"Midnight Pantry - {item_name}"[:40])
+    tn = quote(f"HostelHub - {item_name}"[:40])
     am = f"{price:.2f}" if price and price > 0 else ""
     am_param = f"&am={am}" if am else ""
     return f"upi://pay?pa={vpa}&pn={pn}{am_param}&cu=INR&tn={tn}"
@@ -443,12 +461,26 @@ def dashboard():
     active_requests = req_base.order_by(ItemRequest.created_at.desc()).all()
     my_requests = ItemRequest.query.filter_by(user_id=user.id).order_by(ItemRequest.created_at.desc()).all()
 
+    # 3. Campus Delivery & Errands (STRICT COLLEGE ISOLATION)
+    deliv_base = (db.session.query(DeliveryOrder, User)
+                  .join(User, DeliveryOrder.requester_id == User.id)
+                  .filter(
+                      User.college_name == user.college_name,
+                      User.hostel_name == user.hostel_name,
+                      DeliveryOrder.status.in_(["open", "claimed"])
+                  ))
+    active_deliveries = deliv_base.order_by(DeliveryOrder.created_at.desc()).all()
+    my_deliveries = DeliveryOrder.query.filter(
+        (DeliveryOrder.requester_id == user.id) | (DeliveryOrder.runner_id == user.id)
+    ).order_by(DeliveryOrder.created_at.desc()).limit(15).all()
+
     return render_template(
         "dashboard.html", user=user, q=q, category=category, tab=tab,
         searching=searching, results=results, recent=recent,
         other_hostel_has=other_hostel_has,
         other_hostel_name=other_hostel_of(user.hostel_name),
         my_items=my_items, active_requests=active_requests, my_requests=my_requests,
+        active_deliveries=active_deliveries, my_deliveries=my_deliveries,
         categories=CATEGORIES, urgencies=URGENCIES,
     )
 
@@ -528,6 +560,102 @@ def delete_request(req_id):
     db.session.commit()
     flash("Request removed.")
     return redirect(request.referrer or url_for("dashboard", tab="requests"))
+
+
+# ════════════════════════════════════════════
+#  CAMPUS DELIVERY & ERRANDS — "Earn & Deliver"
+# ════════════════════════════════════════════
+
+@app.route("/delivery/create", methods=["POST"])
+@login_required
+def create_delivery():
+    user          = current_user()
+    shop_location = request.form.get("shop_location", "").strip()[:100]
+    items_summary = request.form.get("items_summary", "").strip()[:250]
+    cost_str      = request.form.get("estimated_cost", "0").strip()
+    fee_str       = request.form.get("delivery_fee", "15").strip()
+    notes         = request.form.get("special_notes", "").strip()[:200]
+
+    if not shop_location or not items_summary:
+        flash("Please specify the shop/canteen location and what you need picked up.")
+        return redirect(url_for("dashboard", tab="delivery"))
+
+    try:
+        est_cost = max(0.0, float(cost_str))
+    except (ValueError, TypeError):
+        est_cost = 0.0
+
+    try:
+        deliv_fee = max(5.0, float(fee_str))
+    except (ValueError, TypeError):
+        deliv_fee = 15.0
+
+    order = DeliveryOrder(
+        requester_id=user.id,
+        shop_location=shop_location,
+        items_summary=items_summary,
+        estimated_cost=est_cost,
+        delivery_fee=deliv_fee,
+        special_notes=notes,
+        status="open"
+    )
+    db.session.add(order)
+    db.session.commit()
+    flash(f"Delivery errand posted! Reward ₹{int(deliv_fee)} offered for delivery from {shop_location}. 🛵")
+    return redirect(url_for("dashboard", tab="delivery"))
+
+
+@app.route("/delivery/<int:order_id>/claim", methods=["POST"])
+@login_required
+def claim_delivery(order_id):
+    user = current_user()
+    order = db.session.get(DeliveryOrder, order_id)
+    if not order or order.status != "open":
+        flash("This delivery request is no longer open.")
+        return redirect(url_for("dashboard", tab="delivery"))
+
+    if order.requester_id == user.id:
+        flash("You cannot claim your own delivery request!")
+        return redirect(url_for("dashboard", tab="delivery"))
+
+    order.runner_id = user.id
+    order.status = "claimed"
+    order.accepted_at = datetime.utcnow()
+    db.session.commit()
+    flash(f"You claimed this errand for ₹{int(order.delivery_fee)} reward! Message {order.requester.name} to confirm details. 🛵")
+    return redirect(url_for("chat_detail", target_id=order.requester_id))
+
+
+@app.route("/delivery/<int:order_id>/complete", methods=["POST"])
+@login_required
+def complete_delivery(order_id):
+    user = current_user()
+    order = db.session.get(DeliveryOrder, order_id)
+    if not order:
+        abort(404)
+
+    if order.requester_id != user.id and order.runner_id != user.id:
+        abort(403)
+
+    order.status = "completed"
+    order.completed_at = datetime.utcnow()
+    db.session.commit()
+    flash("Delivery marked as completed and paid! Great job helping a fellow hosteller! 🎉")
+    return redirect(url_for("dashboard", tab="delivery"))
+
+
+@app.route("/delivery/<int:order_id>/cancel", methods=["POST"])
+@login_required
+def cancel_delivery(order_id):
+    user = current_user()
+    order = db.session.get(DeliveryOrder, order_id)
+    if not order or order.requester_id != user.id:
+        abort(403)
+
+    order.status = "cancelled"
+    db.session.commit()
+    flash("Delivery request cancelled.")
+    return redirect(url_for("dashboard", tab="delivery"))
 
 
 # ════════════════════════════════════════════
