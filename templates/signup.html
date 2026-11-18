@@ -251,8 +251,19 @@
           </div>
         </div>
 
+        <!-- Referral Code (optional) -->
+        <div class="field" style="margin-top:0.75rem;">
+          <label class="field-label" for="ref_code" style="font-size:0.82rem; color:var(--text-muted);">
+            🎁 Have a friend's invite code? <span style="font-weight:400;">(Optional)</span>
+          </label>
+          <input id="ref_code" type="text" name="ref_code" maxlength="10"
+                 value="{{ ref_code or form.get('ref_code', '') }}"
+                 placeholder="e.g. A3F2B109"
+                 style="text-transform:uppercase; letter-spacing:0.1em; font-weight:700; font-family:monospace;">
+        </div>
+
         <!-- Submit Button -->
-        <button class="btn btn-primary btn-full" type="submit" style="margin-top: 1.6rem;">Create profile</button>
+        <button class="btn btn-primary btn-full" type="submit" style="margin-top: 1.6rem;">Create profile →</button>
       </form>
 
       <p class="auth-switch">

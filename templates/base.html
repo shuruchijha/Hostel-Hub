@@ -900,6 +900,10 @@
     </span>
     <span class="mobile-nav-label">Chat</span>
   </a>
+  <a href="{{ url_for('invite') }}" class="mobile-nav-item {{ 'active' if request.endpoint == 'invite' else '' }}">
+    <span class="mobile-nav-icon">🎁</span>
+    <span class="mobile-nav-label">Invite</span>
+  </a>
   <a href="{{ url_for('community') }}" class="mobile-nav-item {{ 'active' if 'community' in (request.endpoint or '') else '' }}">
     <span class="mobile-nav-icon">👥</span>
     <span class="mobile-nav-label">Groups</span>

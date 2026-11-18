@@ -1,7 +1,7 @@
 import os
 from urllib.parse import quote
 import secrets
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import (Flask, abort, flash, redirect, render_template,
@@ -10,7 +10,10 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__, static_folder="static")
-app.secret_key = os.environ.get("SECRET_KEY", "midnight-pantry-secret-key-prod-2026")
+app.secret_key = os.environ.get("SECRET_KEY", "hostelhub-secret-key-prod-2026")
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=180) # 6 Months Remember Me
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 # Database URI: uses cloud PostgreSQL if DATABASE_URL is set, otherwise local SQLite
 raw_db_url = (os.environ.get("DATABASE_URL") or "").strip().strip("'\"")
@@ -55,20 +58,14 @@ app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 86400  # Cache static files 24h
 db = SQLAlchemy(app)
 
 from colleges import ALL_COLLEGES
+from hostels import ALL_HOSTELS
+from blocks import ALL_BLOCKS
 
 POPULAR_COLLEGES = ALL_COLLEGES
-
-POPULAR_HOSTELS = [
-    "Girls Hostel", "Boys Hostel",
-    "Hostel 1", "Hostel 2", "Hostel 3", "Hostel 4", "Hostel 5",
-    "Hostel 6", "Hostel 7", "Hostel 8", "Hostel 9", "Hostel 10",
-    "Hostel 11", "Hostel 12", "Hostel 13", "Hostel 14", "Hostel 15",
-    "Ganga Hostel", "Yamuna Hostel", "Kaveri Hostel", "Narmada Hostel",
-    "Godavari Hostel", "Saraswati Hostel", "Aryabhatta Bhavan", "Ramanujan Bhavan",
-    "Tagore Hall", "Visvesvaraya Hostel", "Mega Boys Hostel", "Mega Girls Hostel",
-]
-HOSTELS = POPULAR_HOSTELS
-GIRLS_BLOCKS = ["Krishnaveni", "Bhima", "Tungabhadra", "Munneru", "Ghataprabha"]
+POPULAR_HOSTELS = ALL_HOSTELS
+HOSTELS = ALL_HOSTELS
+GIRLS_BLOCKS = ALL_BLOCKS
+POPULAR_BLOCKS = ALL_BLOCKS
 
 CATEGORIES = {
     "Food": "🍜",
@@ -107,6 +104,9 @@ class User(db.Model):
     password_hash = db.Column(db.String(200))
     upi_id        = db.Column(db.String(100), nullable=True)    # optional UPI ID (e.g. name@upi)
     phone_number  = db.Column(db.String(20),  nullable=True)    # optional phone number for GPay/PhonePe/Paytm
+    referral_code    = db.Column(db.String(10), unique=True, nullable=True)   # e.g. "A3F2B109"
+    referred_by      = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    referral_points  = db.Column(db.Integer, default=0)         # 1 point = ₹1 or badge
 
 
 class Message(db.Model):
@@ -320,6 +320,7 @@ def signup():
     if current_user():
         return redirect(url_for("dashboard"))
 
+    ref_code = request.args.get("ref", "").strip().upper() or request.form.get("ref_code", "").strip().upper()
     error = None
     if request.method == "POST":
         name             = request.form.get("name", "").strip()
@@ -330,6 +331,7 @@ def signup():
         email            = request.form.get("email", "").strip().lower()
         password         = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
+        ref_code         = request.form.get("ref_code", "").strip().upper()
 
         if not name or not room_no or not email:
             error = "Please fill in your name, room number and email."
@@ -345,21 +347,40 @@ def signup():
             error = "An account with this email already exists."
 
         if not error:
+            # Find referrer if ref_code provided
+            referrer = None
+            if ref_code:
+                referrer = User.query.filter_by(referral_code=ref_code).first()
+
             user = User(
                 name=name, college_name=college_name, room_no=room_no,
                 hostel_name=hostel, block=block, email=email,
                 password_hash=generate_password_hash(password),
+                referral_code=secrets.token_hex(4).upper(),   # e.g. "A3F2B109"
+                referred_by=referrer.id if referrer else None,
+                referral_points=0,
             )
             db.session.add(user)
+            db.session.flush()   # get user.id before commit
+
+            # Award 10 points to referrer
+            if referrer:
+                referrer.referral_points = (referrer.referral_points or 0) + 10
+
             db.session.commit()
+            session.permanent = True   # auto-remember new users
             session["user_id"] = user.id
-            flash("Welcome aboard! Your campus profile is ready. 🎉")
+            if referrer:
+                flash(f"Welcome! You joined via {referrer.name}'s invite 🎉 They earned 10 bonus points!")
+            else:
+                flash("Welcome aboard! Your campus profile is ready. 🎉")
             after = session.pop("after_login", None)
             return redirect(after or url_for("dashboard"))
 
     return render_template("signup.html", error=error, form=request.form,
                            hostels=POPULAR_HOSTELS, blocks=GIRLS_BLOCKS,
-                           popular_colleges=POPULAR_COLLEGES, popular_hostels=POPULAR_HOSTELS)
+                           popular_colleges=POPULAR_COLLEGES, popular_hostels=POPULAR_HOSTELS,
+                           ref_code=ref_code)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -372,6 +393,8 @@ def login():
         email = request.form.get("email", "").strip().lower()
         user  = User.query.filter_by(email=email).first()
         if user and check_password_hash(user.password_hash, request.form.get("password", "")):
+            remember = bool(request.form.get("remember_me"))
+            session.permanent = remember   # True = 6 months, False = browser session
             session["user_id"] = user.id
             after = session.pop("after_login", None)
             return redirect(after or url_for("dashboard"))
@@ -1147,6 +1170,12 @@ def init_db():
                     conn.execute(text(f"ALTER TABLE {user_tbl_name} ADD COLUMN upi_id VARCHAR(100)"))
                 if "phone_number" not in user_cols:
                     conn.execute(text(f"ALTER TABLE {user_tbl_name} ADD COLUMN phone_number VARCHAR(20)"))
+                if "referral_code" not in user_cols:
+                    conn.execute(text(f"ALTER TABLE {user_tbl_name} ADD COLUMN referral_code VARCHAR(10)"))
+                if "referred_by" not in user_cols:
+                    conn.execute(text(f"ALTER TABLE {user_tbl_name} ADD COLUMN referred_by INTEGER"))
+                if "referral_points" not in user_cols:
+                    conn.execute(text(f"ALTER TABLE {user_tbl_name} ADD COLUMN referral_points INTEGER DEFAULT 0"))
 
         if "item_request" in tables:
             req_cols = {c["name"] for c in insp.get_columns("item_request")}
@@ -1160,6 +1189,27 @@ try:
     init_db()
 except Exception as e:
     print(f"Database bootstrap note (non-fatal): {e}")
+
+
+# ════════════════════════════════════════════
+#  REFERRAL / INVITE
+# ════════════════════════════════════════════
+
+@app.route("/invite")
+@login_required
+def invite():
+    user = current_user()
+    # Generate code if not set yet (back-compat for old users)
+    if not user.referral_code:
+        user.referral_code = secrets.token_hex(4).upper()
+        db.session.commit()
+    base_url = request.host_url.rstrip("/")
+    invite_link = f"{base_url}/signup?ref={user.referral_code}"
+    # Count how many people joined using this code
+    referred_count = User.query.filter_by(referred_by=user.id).count()
+    return render_template("invite.html", user=user,
+                           invite_link=invite_link,
+                           referred_count=referred_count)
 
 
 if __name__ == "__main__":
