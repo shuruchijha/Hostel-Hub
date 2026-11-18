@@ -33,19 +33,9 @@ else:
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 86400  # Cache static files 24h
 db = SQLAlchemy(app)
 
-POPULAR_COLLEGES = [
-    "IIT Bombay", "IIT Delhi", "IIT Madras", "IIT Kanpur", "IIT Kharagpur",
-    "IIT Roorkee", "IIT Guwahati", "IIT BHU Varanasi", "IIT Hyderabad",
-    "BITS Pilani", "BITS Goa", "BITS Hyderabad",
-    "NIT Trichy", "NIT Surathkal", "NIT Rourkela", "NIT Warangal", "NIT Calicut",
-    "VIT Vellore", "VIT Chennai", "SRM University Chennai", "KIIT Bhubaneswar",
-    "Manipal Academy of Higher Education (MAHE)", "Thapar University Patiala",
-    "Delhi University (DU)", "Jadavpur University", "Anna University",
-    "DTU Delhi", "NSUT Delhi", "IIIT Hyderabad", "IIIT Bangalore", "IIIT Delhi",
-    "Aligarh Muslim University (AMU)", "Banaras Hindu University (BHU)",
-    "Amity University Noida", "Lovely Professional University (LPU)",
-    "Symbiosis International Pune", "Christ University Bengaluru",
-]
+from colleges import ALL_COLLEGES
+
+POPULAR_COLLEGES = ALL_COLLEGES
 
 POPULAR_HOSTELS = [
     "Girls Hostel", "Boys Hostel",
