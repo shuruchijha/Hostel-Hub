@@ -17,21 +17,27 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 # Database URI: uses cloud PostgreSQL if DATABASE_URL is set, otherwise local SQLite
 raw_db_url = (os.environ.get("DATABASE_URL") or "").strip().strip("'\"")
-if raw_db_url.startswith("DATABASE_URL="):
-    raw_db_url = raw_db_url.split("=", 1)[1].strip().strip("'\"")
+if "DATABASE_URL=" in raw_db_url:
+    raw_db_url = raw_db_url.split("DATABASE_URL=", 1)[1].strip().strip("'\"")
 if raw_db_url.startswith("psql "):
     raw_db_url = raw_db_url.replace("psql ", "").strip().strip("'\"")
 if raw_db_url.startswith("postgres://"):
     raw_db_url = "postgresql://" + raw_db_url[len("postgres://"):]
 
+# If external Render PostgreSQL URL, ensure sslmode=require
+if ("render.com" in raw_db_url or "supabase" in raw_db_url) and "sslmode" not in raw_db_url:
+    sep = "&" if "?" in raw_db_url else "?"
+    raw_db_url = f"{raw_db_url}{sep}sslmode=require"
+
 # Test cloud DB connection before committing to it so startup never crashes
 use_cloud_db = False
+db_connection_error = None
 if raw_db_url and ("postgresql" in raw_db_url):
     try:
         from sqlalchemy import create_engine, text
         test_engine = create_engine(
             raw_db_url,
-            connect_args={"connect_timeout": 5},
+            connect_args={"connect_timeout": 8},
             pool_pre_ping=True
         )
         with test_engine.connect() as conn:
@@ -48,6 +54,7 @@ if raw_db_url and ("postgresql" in raw_db_url):
         }
         print("Connected to Cloud PostgreSQL database successfully!")
     except Exception as err:
+        db_connection_error = str(err)
         print(f"Cloud PostgreSQL could not connect ({err}). Safely falling back to local SQLite!")
 
 if not use_cloud_db:
@@ -1210,6 +1217,32 @@ def invite():
     return render_template("invite.html", user=user,
                            invite_link=invite_link,
                            referred_count=referred_count)
+
+
+@app.route("/db-status")
+def db_status():
+    from flask import jsonify
+    # Mask password for safety
+    masked_url = ""
+    if raw_db_url:
+        import re
+        masked_url = re.sub(r"://([^:]+):([^@]+)@", r"://\1:****@", raw_db_url)
+    
+    user_count = 0
+    try:
+        user_count = User.query.count()
+    except Exception as e:
+        user_count = f"query failed: {e}"
+
+    return jsonify({
+        "active_backend": "PostgreSQL (Persistent Cloud)" if use_cloud_db else "SQLite (Ephemeral - Erased on Restart)",
+        "is_cloud_persistent": use_cloud_db,
+        "database_url_configured": bool(raw_db_url),
+        "database_url_sample": masked_url[:35] + "..." if masked_url else "NOT SET in Environment",
+        "connection_error": db_connection_error,
+        "registered_users_count": user_count,
+        "timestamp": datetime.utcnow().isoformat()
+    })
 
 
 if __name__ == "__main__":
