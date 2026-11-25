@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>{% block title %}HostelHub · Verified Campus Marketplace & Errands{% endblock %}</title>
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}?v=hh5">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}?v=hh5">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}?v=hh5">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <meta name="theme-color" content="#0a090e">
   <meta name="color-scheme" content="dark">
@@ -827,7 +828,7 @@
 <nav class="nav" role="navigation" aria-label="Main navigation">
   <div class="nav-inner">
     <a href="{{ url_for('dashboard') if me else url_for('login') }}" class="nav-logo">
-      <img src="{{ url_for('static', filename='logo.png') }}" alt="HostelHub Logo" class="nav-brand-logo">
+      <img src="{{ url_for('static', filename='logo.png') }}?v=hh5" alt="HostelHub Logo" class="nav-brand-logo">
       <span class="brand-highlight">HostelHub</span>
       <span class="nav-tag-pill">Campus Life</span>
     </a>
@@ -936,7 +937,7 @@
 <!-- ───── FOOTER ───── -->
 <footer>
   <div style="display:inline-flex; align-items:center; gap:8px; justify-content:center; flex-wrap:wrap;">
-    <img src="{{ url_for('static', filename='logo.png') }}" alt="HostelHub" style="width:20px; height:20px; border-radius:6px; vertical-align:middle; border:1px solid rgba(245,166,35,0.35);">
+    <img src="{{ url_for('static', filename='logo.png') }}?v=hh5" alt="HostelHub" style="width:20px; height:20px; border-radius:6px; vertical-align:middle; border:1px solid rgba(245,166,35,0.35);">
     <span><strong>HostelHub</strong> · Verified student marketplace & campus delivery network · Safe, private & student-run</span>
   </div>
 </footer>
