@@ -201,6 +201,22 @@ class CommunityMember(db.Model):
 
 
 # ════════════════════════════════════════════
+#  HEALTH CHECK (keeps app awake & shows DB status)
+# ════════════════════════════════════════════
+
+@app.route("/health")
+def health_check():
+    """Lightweight ping endpoint — used by UptimeRobot / cron to keep app awake."""
+    from flask import jsonify
+    from sqlalchemy import text as sa_text
+    try:
+        db.session.execute(sa_text("SELECT 1"))
+        return jsonify({"status": "ok", "db": "connected", "app": "HostelHub"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "db": str(e)}), 500
+
+
+# ════════════════════════════════════════════
 #  HELPERS
 # ════════════════════════════════════════════
 
